@@ -66,6 +66,10 @@ const ogImageUrl = new URL(ogImage, Astro.site ?? SITE.url);
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
 
+    <!--
+      theme-color 必须是字面量（HTML 属性无法使用 CSS 变量）。
+      此值与 tokens.css 的 --ys-void 保持一致，改动配色时需同步。
+    -->
     <meta name="theme-color" content="#05050c" />
     <meta name="color-scheme" content="dark" />
 

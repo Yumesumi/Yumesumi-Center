@@ -2,6 +2,9 @@
 
 沉浸式个人数字门户 —— 聚合梦澄博客、梦澄指数、Minecraft 服务器与模组工坊、Yumesumi Labs 与 Yumesumi Studio 的统一数字空间。
 
+> **接手开发请先读 [`docs/HANDOVER.md`](docs/HANDOVER.md)** —— 里面有未完成事项盘点、
+> 技术债清单、必须知道的坑，以及生产环境验证工具链的说明。
+
 ## 技术栈
 
 | 领域 | 选型                                              | 说明                               |
@@ -9,12 +12,13 @@
 | 框架 | Astro 7.4.2                                       | 静态生成与路由，输出纯静态 HTML    |
 | 类型 | TypeScript 6.0.3                                  | `astro check` 严格模式             |
 | 样式 | 原生 CSS + CSS 变量                               | 无 CSS 框架，变量集中在 tokens.css |
-| 动效 | GSAP 3.15.0（含 ScrollTrigger）                   | 时间轴与滚动叙事（Phase 3 接入）   |
-| 滚动 | Lenis 1.3.27                                      | 平滑滚动增强（Phase 3 接入）       |
 | 部署 | GitHub Pages（gh-pages 分支发布，不使用 Actions） | 项目仓库，路径 `/Yumesumi-Center/` |
 
 > **没有前端框架依赖**：站点为纯静态 HTML + CSS，不含任何运行时 JavaScript。
 > 首屏不下载 JS，禁用 JavaScript 时内容与样式依然完整（由 `tools/verify-nojs.mjs` 验证）。
+>
+> 动效依赖（GSAP / Lenis）尚未安装——按项目约定「不安装没有实际用途的依赖」，
+> 需要时在 Phase 3 再装。
 
 ## 环境要求
 
@@ -43,18 +47,18 @@ npm run assets:fonts   # 重新生成字体子集 public/fonts/*
 ```
 src/
 ├── components/
-│   ├── motion/       # GSAP 时间轴与滚动叙事（Phase 3）
-│   ├── sections/     # 首页各章节
-│   └── ui/           # 通用 UI 组件（含 BrandLogo）
+│   ├── sections/     # 首页 A–F 六章节
+│   └── ui/           # 通用 UI 组件（含 BrandLogo、StarField）
 ├── data/             # 项目清单、导航、站点元信息（结构化数据源）
 ├── layouts/          # 页面布局
 ├── pages/            # 路由
 └── styles/           # 设计变量与全局样式
 public/
-├── brand/            # Logo（SVG + PNG）
+├── brand/            # Logo（SVG）
 └── fonts/            # MiSans 子集（自动生成，勿手工修改）
-tools/                # 资产管线与验证脚本
+tools/                # 资产管线与验证脚本（非业务代码）
 scripts/              # 字体子集化脚本
+docs/                 # HANDOVER.md（交接）、deployment.md（部署）
 ```
 
 ## 设计系统
@@ -105,15 +109,33 @@ MiSans 原始素材约 259MB。`scripts/subset_fonts.py` 使用可变字体 `MiS
 位于文字之后作为空间与质感。尺寸与位置经过调参：太小则失去存在感，
 太大则菱形框的边会跑出画面、只剩中央四芒星，反而认不出是 Logo。
 
+### 星空粒子层
+
+`src/components/ui/StarField.astro` 在首屏铺一层微弱闪烁的星点。
+粒子形状**取自 Logo 的小四芒星路径**（归一化后作为 CSS mask 复用），
+因此背景星点与品牌标记同源，不是随手画的替代图形。
+
+- 32 颗星形粒子 + 44 颗尘埃点，位置/大小/周期/相位/缓动各不相同
+- 关键帧不等分，且最低亮度保留一个底数——星星不会真正消失，
+  避免出现「整片天空同时熄灭」的信号灯感
+- 双层遮罩：上下边缘渐隐 + 中央文字区压暗，星点不直接压字标
+- `prefers-reduced-motion` 下停止闪烁，保留静态低亮度
+- **纯 CSS 实现**，站点依然零运行时 JavaScript
+
 ## 验证
+
+> `tools/` 下是**验证工具链**，不是业务代码。它比业务代码还长是刻意的——
+> 这个项目的大部分 bug 只有在真实浏览器里才能暴露（见 `docs/HANDOVER.md` §7）。
 
 ```bash
 npm run check && npm run build
-node tools/smoke.mjs            # 逐路由浏览器冒烟：控制台报错、资源加载、4 断点横向溢出
-node tools/shoot.mjs            # 多视口截图，产物在 .shots/
-node tools/verify-logo.mjs      # Logo 像素级校验（几何与原 PNG 一致性）
-node tools/verify-nojs.mjs      # 禁用 JavaScript 时的内容完整性验证
+node tools/smoke.mjs             # 逐路由浏览器冒烟：控制台报错、资源加载、4 断点横向溢出
+node tools/shoot.mjs             # 多视口截图，产物在 .shots/
+node tools/verify-logo.mjs       # Logo 像素级校验（几何与原 PNG 一致性）
+node tools/verify-nojs.mjs       # 禁用 JavaScript 时的内容完整性验证
 node tools/verify-production.mjs # 生产环境端到端验证
+node tools/shoot-particles.mjs   # 粒子亮度多时刻采样（验证闪烁不同步）
+node tools/zoom-particles.mjs    # 粒子层放大 4 倍（核对四芒星形状）
 ```
 
 冒烟与截图工具会读取 `astro.config.mjs` 的 `base`，

@@ -158,7 +158,7 @@ const all = [...STARS, ...DUST];
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
     /* 辉光让四芒星的尖角在深背景上更清晰 */
-    filter: drop-shadow(0 0 5px rgb(185 168 240 / 70%));
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ys-lavender) 70%, transparent));
   }
 
   .starfield__dot.is-dust {

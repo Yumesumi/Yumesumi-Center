@@ -26,18 +26,4 @@ export default defineConfig({
   devToolbar: {
     enabled: false,
   },
-
-  vite: {
-    build: {
-      rollupOptions: {
-        output: {
-          // Astro 7 使用 Rolldown 作为打包器，分包配置走 codeSplitting.groups。
-          // GSAP 体积较大且只在动效相关代码里用到，单独拆包便于并行加载。
-          codeSplitting: {
-            groups: [{ name: 'motion', test: /node_modules[\\/]gsap[\\/]/ }],
-          },
-        },
-      },
-    },
-  },
 });

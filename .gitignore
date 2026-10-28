@@ -18,8 +18,13 @@ yumesumi-fonts-outside/
 
 # 工具产物
 .shots/
-tools/.logo-diff.png
-tools/.logo-visual.png
+tools/.*.png
+
+# 部署暂存目录
+.deploy-pages/
+
+# Agent 工作记忆（本地，不入库）
+.workbuddy/
 
 # 编辑器与系统
 .vscode/*
@@ -32,19 +37,3 @@ Thumbs.db
 npm-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
-# Agent 工作记忆（本地，不入库）
-.workbuddy/
-
-# 部署暂存目录
-.deploy-pages/
-
-# 临时调参产物
-tools/hero-tune.mjs
-tools/.hero-tune.png
-tools/.filter-test.png
-
-# 临时调参产物
-tools/.hero-tune.png
-tools/.particle-tune.png
-tools/.star-zoom.png

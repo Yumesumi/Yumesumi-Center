@@ -105,8 +105,8 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     border-radius: 50%;
     background: radial-gradient(
       circle,
-      rgb(109 79 196 / 24%) 0%,
-      rgb(45 31 86 / 14%) 40%,
+      color-mix(in srgb, var(--ys-purple) 24%, transparent) 0%,
+      color-mix(in srgb, var(--ys-purple-deep) 14%, transparent) 40%,
       transparent 70%
     );
     filter: blur(32px);
@@ -161,7 +161,7 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     letter-spacing: var(--ys-ls-tight);
     color: var(--ys-text);
     /* 柔光而非锐利发光，保持冷白字的干净边缘 */
-    text-shadow: 0 0 90px rgb(13 11 26 / 70%);
+    text-shadow: 0 0 90px color-mix(in srgb, var(--ys-void) 70%, transparent);
   }
 
   .hero__wordmark-line {
@@ -210,7 +210,7 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
   .hero__cta:hover,
   .hero__cta:focus-visible {
     border-color: var(--ys-purple);
-    background-color: rgb(109 79 196 / 14%);
+    background-color: color-mix(in srgb, var(--ys-purple) 14%, transparent);
     transform: translateY(-2px);
   }
 
