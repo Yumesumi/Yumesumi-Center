@@ -24,7 +24,17 @@ if (!CHROME) {
   process.exit(2);
 }
 
-const ROUTES = ['/', '/about/', '/projects/', '/blog/', '/ysi/', '/minecraft/', '/mods/', '/labs/', '/studio/'];
+const ROUTES = [
+  '/',
+  '/about/',
+  '/projects/',
+  '/blog/',
+  '/ysi/',
+  '/minecraft/',
+  '/mods/',
+  '/labs/',
+  '/studio/',
+];
 
 const userDataDir = mkdtempSync(join(tmpdir(), 'prod-'));
 const child = spawn(
@@ -75,7 +85,9 @@ ws.addEventListener('message', (event) => {
     return;
   }
   if (msg.method === 'Runtime.consoleAPICalled' && msg.params.type === 'error') {
-    logs.push(`console: ${(msg.params.args ?? []).map((a) => a.value ?? a.description ?? '').join(' ')}`);
+    logs.push(
+      `console: ${(msg.params.args ?? []).map((a) => a.value ?? a.description ?? '').join(' ')}`,
+    );
   } else if (msg.method === 'Runtime.exceptionThrown') {
     logs.push(`exception: ${msg.params.exceptionDetails.exception?.description ?? ''}`);
   } else if (msg.method === 'Log.entryAdded' && msg.params.entry.level === 'error') {
@@ -101,12 +113,16 @@ await send('Runtime.enable', {}, sessionId);
 await send('Log.enable', {}, sessionId);
 await send('Network.enable', {}, sessionId);
 
-await send('Emulation.setDeviceMetricsOverride', {
-  width: 1440,
-  height: 900,
-  deviceScaleFactor: 1,
-  mobile: false,
-}, sessionId);
+await send(
+  'Emulation.setDeviceMetricsOverride',
+  {
+    width: 1440,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  },
+  sessionId,
+);
 
 console.log(`[prod] 线上站点验证: ${SITE}\n`);
 
@@ -117,11 +133,17 @@ for (const route of ROUTES) {
   await send('Page.navigate', { url: `${SITE}${route}` }, sessionId);
   // 等待页面加载与字体就绪
   await new Promise((r) => setTimeout(r, 2500));
-  await send('Runtime.evaluate', { expression: 'document.fonts.ready', awaitPromise: true }, sessionId);
+  await send(
+    'Runtime.evaluate',
+    { expression: 'document.fonts.ready', awaitPromise: true },
+    sessionId,
+  );
   await new Promise((r) => setTimeout(r, 400));
 
-  const probe = await send('Runtime.evaluate', {
-    expression: `(() => ({
+  const probe = await send(
+    'Runtime.evaluate',
+    {
+      expression: `(() => ({
       title: document.title,
       hasHeading: !!document.querySelector('h1, .hero__wordmark'),
       bodyLength: (document.body.innerText || '').length,
@@ -131,8 +153,10 @@ for (const route of ROUTES) {
       navLinks: document.querySelectorAll('.site-nav__link').length,
       stylesApplied: getComputedStyle(document.body).backgroundColor,
     }))()`,
-    returnByValue: true,
-  }, sessionId);
+      returnByValue: true,
+    },
+    sessionId,
+  );
 
   const v = probe.result?.value;
   if (!v) {
