@@ -1,0 +1,408 @@
+---
+/**
+ * 顶部导航。
+ *
+ * 设计要点：
+ *   · 极简、低存在感，默认透明浮于页面之上；
+ *   · 滚动超过阈值后切换为实底 + 细边线，保证文字对比度；
+ *   · 移动端使用独立的全屏菜单，键盘可操作，焦点被困在菜单内。
+ *
+ * 交互用原生 JS 实现（约 100 行），不为这一点逻辑引入框架。
+ */
+import { PRIMARY_NAV } from '@/data/navigation';
+import { SITE } from '@/data/site';
+
+const currentPath = Astro.url.pathname;
+
+/** 当前页高亮判定：/about/ 命中 about，根路径只命中 / */
+const isActive = (href: string, key: string) => {
+  if (key === 'home') return currentPath === '/';
+  return currentPath.startsWith(href);
+};
+---
+
+<header class="site-nav" data-site-nav>
+  <div class="site-nav__inner ys-container ys-container--wide">
+    <a class="site-nav__brand" href="/" aria-label={`${SITE.name} 首页`}>
+      <img class="site-nav__mark" src="/brand/logo.svg" alt="" width="28" height="28" />
+      <span class="site-nav__wordmark">{SITE.wordmark}</span>
+    </a>
+
+    <nav class="site-nav__links" aria-label="主导航">
+      <ul>
+        {PRIMARY_NAV.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              class:list={['site-nav__link', { 'is-active': isActive(item.href, item.key) }]}
+              aria-current={isActive(item.href, item.key) ? 'page' : undefined}
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <button
+      class="site-nav__toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="site-menu"
+      data-menu-toggle
+    >
+      <span class="site-nav__toggle-label">MENU</span>
+      <span class="site-nav__toggle-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+      </span>
+      <span class="ys-sr-only">打开菜单</span>
+    </button>
+  </div>
+</header>
+
+<!-- 移动端全屏菜单 -->
+<div class="site-menu" id="site-menu" hidden data-menu-panel>
+  <div class="site-menu__inner ys-container">
+    <nav aria-label="移动端导航">
+      <ul class="site-menu__list">
+        {PRIMARY_NAV.map((item, index) => (
+          <li style={`--i: ${index}`}>
+            <a
+              href={item.href}
+              class:list={['site-menu__link', { 'is-active': isActive(item.href, item.key) }]}
+            >
+              <span class="site-menu__index">{String(index + 1).padStart(2, '0')}</span>
+              <span class="site-menu__label">{item.label}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="site-menu__foot">
+      <a class="site-menu__meta" href="mailto:{SITE.email}">
+        {SITE.email}
+      </a>
+      <a class="site-menu__meta" href="https://github.com/" rel="noopener noreferrer">
+        GitHub
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .site-nav {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: var(--ys-z-nav);
+    transition:
+      background-color var(--ys-dur-slow) var(--ys-ease-smooth),
+      border-color var(--ys-dur-slow) var(--ys-ease-smooth),
+      backdrop-filter var(--ys-dur-slow) var(--ys-ease-smooth);
+    border-block-end: 1px solid transparent;
+  }
+
+  .site-nav.is-scrolled {
+    background-color: rgb(5 5 12 / 72%);
+    backdrop-filter: blur(18px) saturate(140%);
+    border-block-end-color: var(--ys-border-subtle);
+  }
+
+  .site-nav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ys-space-md);
+    block-size: var(--ys-nav-height);
+  }
+
+  .site-nav__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ys-space-2xs);
+    flex-shrink: 0;
+  }
+
+  .site-nav__mark {
+    inline-size: 26px;
+    block-size: 26px;
+    opacity: 0.92;
+    transition: opacity var(--ys-dur-fast) var(--ys-ease-out);
+  }
+
+  .site-nav__brand:hover .site-nav__mark {
+    opacity: 1;
+  }
+
+  .site-nav__wordmark {
+    font-size: var(--ys-fs-2xs);
+    font-weight: var(--ys-weight-medium);
+    letter-spacing: var(--ys-ls-wider);
+    color: var(--ys-text-secondary);
+    transition: color var(--ys-dur-fast) var(--ys-ease-out);
+  }
+
+  .site-nav__brand:hover .site-nav__wordmark {
+    color: var(--ys-text);
+  }
+
+  .site-nav__links ul {
+    display: flex;
+    align-items: center;
+    gap: var(--ys-space-md);
+  }
+
+  .site-nav__link {
+    position: relative;
+    display: inline-block;
+    padding-block: var(--ys-space-3xs);
+    font-size: var(--ys-fs-2xs);
+    font-weight: var(--ys-weight-medium);
+    letter-spacing: var(--ys-ls-wide);
+    color: var(--ys-text-muted);
+    transition: color var(--ys-dur-fast) var(--ys-ease-out);
+  }
+
+  .site-nav__link::after {
+    content: '';
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    block-size: 1px;
+    background-color: var(--ys-accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--ys-dur-base) var(--ys-ease-out);
+  }
+
+  .site-nav__link:hover,
+  .site-nav__link:focus-visible {
+    color: var(--ys-text);
+  }
+
+  .site-nav__link:hover::after,
+  .site-nav__link:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  .site-nav__link.is-active {
+    color: var(--ys-text);
+  }
+
+  .site-nav__link.is-active::after {
+    transform: scaleX(1);
+  }
+
+  .site-nav__toggle {
+    display: none;
+    align-items: center;
+    gap: var(--ys-space-2xs);
+    padding: var(--ys-space-2xs) 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+
+  .site-nav__toggle-label {
+    font-size: var(--ys-fs-2xs);
+    font-weight: var(--ys-weight-medium);
+    letter-spacing: var(--ys-ls-wide);
+    color: var(--ys-text-secondary);
+  }
+
+  .site-nav__toggle-icon {
+    display: grid;
+    gap: 4px;
+    inline-size: 18px;
+  }
+
+  .site-nav__toggle-icon span {
+    display: block;
+    block-size: 1px;
+    background-color: var(--ys-text-secondary);
+    transition: transform var(--ys-dur-base) var(--ys-ease-out);
+  }
+
+  /* ---------- 移动端菜单 ---------- */
+
+  .site-menu {
+    position: fixed;
+    inset: 0;
+    z-index: var(--ys-z-menu);
+    display: grid;
+    align-content: center;
+    background-color: var(--ys-void);
+    opacity: 0;
+    transition: opacity var(--ys-dur-slow) var(--ys-ease-smooth);
+  }
+
+  .site-menu[hidden] {
+    display: none;
+  }
+
+  .site-menu.is-open {
+    opacity: 1;
+  }
+
+  .site-menu__list {
+    display: grid;
+    gap: var(--ys-space-xs);
+  }
+
+  .site-menu__list li {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity var(--ys-dur-slow) var(--ys-ease-out),
+      transform var(--ys-dur-slow) var(--ys-ease-out);
+    transition-delay: calc(var(--i) * 55ms);
+  }
+
+  .site-menu.is-open .site-menu__list li {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .site-menu__link {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ys-space-sm);
+    padding-block: var(--ys-space-2xs);
+    font-size: var(--ys-fs-2xl);
+    font-weight: var(--ys-weight-light);
+    letter-spacing: var(--ys-ls-snug);
+    color: var(--ys-text-secondary);
+  }
+
+  .site-menu__index {
+    font-size: var(--ys-fs-2xs);
+    letter-spacing: var(--ys-ls-wide);
+    color: var(--ys-text-faint);
+  }
+
+  .site-menu__link.is-active,
+  .site-menu__link:hover {
+    color: var(--ys-text);
+  }
+
+  .site-menu__foot {
+    display: flex;
+    gap: var(--ys-space-md);
+    margin-block-start: var(--ys-space-xl);
+    padding-block-start: var(--ys-space-md);
+    border-block-start: 1px solid var(--ys-border-subtle);
+  }
+
+  .site-menu__meta {
+    font-size: var(--ys-fs-xs);
+    color: var(--ys-text-muted);
+  }
+
+  @media (max-width: 767px) {
+    .site-nav__links {
+      display: none;
+    }
+
+    .site-nav__toggle {
+      display: inline-flex;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .site-menu {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  /**
+   * 导航行为：滚动状态切换 + 移动端菜单。
+   * 使用 Astro 的视图转换不会重复绑定，这里在每个页面加载时初始化一次，
+   * 并在页面卸载时清理监听。
+   */
+  function initSiteNav() {
+    const nav = document.querySelector<HTMLElement>('[data-site-nav]');
+    const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+    const panel = document.querySelector<HTMLElement>('[data-menu-panel]');
+
+    if (!nav) return;
+
+    // ---- 滚动状态 ----
+    const onScroll = () => {
+      nav.classList.toggle('is-scrolled', window.scrollY > 24);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // ---- 移动端菜单 ----
+    if (toggle && panel) {
+      let lastFocused: HTMLElement | null = null;
+
+      const focusables = () =>
+        Array.from(panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')).filter(
+          (el) => el.offsetParent !== null,
+        );
+
+      const setOpen = (open: boolean) => {
+        panel.hidden = !open;
+        toggle.setAttribute('aria-expanded', String(open));
+        document.documentElement.style.overflow = open ? 'hidden' : '';
+
+        if (open) {
+          lastFocused = document.activeElement as HTMLElement | null;
+          // 等一帧，确保 hidden=false 后元素才有尺寸
+          requestAnimationFrame(() => {
+            panel.classList.add('is-open');
+            focusables()[0]?.focus();
+          });
+        } else {
+          panel.classList.remove('is-open');
+          lastFocused?.focus();
+        }
+      };
+
+      const onKeydown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape' && !panel.hidden) {
+          event.preventDefault();
+          setOpen(false);
+          return;
+        }
+
+        // 焦点陷阱：Tab 键在菜单内循环
+        if (event.key === 'Tab' && !panel.hidden) {
+          const items = focusables();
+          if (items.length === 0) return;
+          const first = items[0]!;
+          const last = items[items.length - 1]!;
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+      };
+
+      toggle.addEventListener('click', () => {
+        setOpen(panel.hasAttribute('hidden'));
+      });
+
+      document.addEventListener('keydown', onKeydown);
+
+      // 点击菜单内的链接后关闭菜单
+      panel.addEventListener('click', (event) => {
+        if ((event.target as HTMLElement).closest('a[href]')) {
+          setOpen(false);
+        }
+      });
+    }
+  }
+
+  initSiteNav();
+  document.addEventListener('astro:page-load', initSiteNav);
+</script>

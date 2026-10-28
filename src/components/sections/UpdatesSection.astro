@@ -1,0 +1,131 @@
+---
+/**
+ * 首页 · Section E — Latest Updates
+ *
+ * 第一版使用静态数据文件手动维护（src/data/updates.ts）。
+ * 明确约定：只登记**已经真实发生**的更新，不编造发布日期或条目。
+ * 接入真实数据源后，替换 src/data/updates.ts 的内容即可，本组件无需改动。
+ */
+import { UPDATES } from '@/data/updates';
+---
+
+<section class="updates" id="updates">
+  <div class="ys-container">
+    <header class="updates__head">
+      <p class="ys-eyebrow">Latest Updates</p>
+      <h2 class="updates__title">最近动态</h2>
+    </header>
+
+    {UPDATES.length === 0 ? (
+      <p class="updates__empty">目前还没有已发布的动态。此处将在接入真实内容源后自动更新。</p>
+    ) : (
+      <ul class="updates__list">
+        {UPDATES.map((update) => (
+          <li class="update">
+            <div class="update__meta">
+              {update.date && <time class="update__date">{update.date}</time>}
+              <span class="update__kind">{update.kind}</span>
+            </div>
+            <div class="update__body">
+              <h3 class="update__title">
+                {update.href ? <a href={update.href}>{update.title}</a> : update.title}
+              </h3>
+              <p class="update__summary">{update.summary}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</section>
+
+<style>
+  .updates {
+    position: relative;
+    padding-block: var(--ys-section-pad);
+    background-color: var(--ys-void);
+  }
+
+  .updates__head {
+    margin-block-end: var(--ys-space-xl);
+  }
+
+  .updates__title {
+    margin-block-start: var(--ys-space-xs);
+    font-size: var(--ys-fs-2xl);
+    font-weight: var(--ys-weight-light);
+    letter-spacing: var(--ys-ls-tight);
+  }
+
+  .updates__empty {
+    max-inline-size: 36rem;
+    font-size: var(--ys-fs-sm);
+    line-height: var(--ys-lh-relaxed);
+    color: var(--ys-text-muted);
+  }
+
+  .updates__list {
+    display: grid;
+    gap: 0;
+  }
+
+  .update {
+    display: grid;
+    grid-template-columns: 12rem 1fr;
+    gap: var(--ys-space-lg);
+    padding-block: var(--ys-space-md);
+    border-block-start: 1px solid var(--ys-border-subtle);
+  }
+
+  .update:last-child {
+    border-block-end: 1px solid var(--ys-border-subtle);
+  }
+
+  .update__meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ys-space-3xs);
+    font-size: var(--ys-fs-2xs);
+    letter-spacing: var(--ys-ls-wide);
+    text-transform: uppercase;
+    color: var(--ys-text-faint);
+  }
+
+  .update__kind {
+    color: var(--ys-text-muted);
+  }
+
+  .update__title {
+    font-size: var(--ys-fs-lg);
+    font-weight: var(--ys-weight-regular);
+    letter-spacing: var(--ys-ls-snug);
+  }
+
+  .update__title a {
+    transition: color var(--ys-dur-fast) var(--ys-ease-out);
+  }
+
+  .update__title a:hover {
+    color: var(--ys-lavender);
+  }
+
+  .update__summary {
+    margin-block-start: var(--ys-space-2xs);
+    max-inline-size: 44rem;
+    font-size: var(--ys-fs-sm);
+    line-height: var(--ys-lh-relaxed);
+    color: var(--ys-text-secondary);
+  }
+
+  @media (max-width: 767px) {
+    .update {
+      grid-template-columns: 1fr;
+      gap: var(--ys-space-2xs);
+    }
+
+    .update__meta {
+      flex-direction: row;
+      gap: var(--ys-space-sm);
+    }
+  }
+</style>

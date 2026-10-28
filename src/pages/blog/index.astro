@@ -1,0 +1,22 @@
+---
+/**
+ * /blog/ —— 梦澄博客
+ *
+ * 技术文章、个人思考与创作记录。
+ *
+ * 该板块尚未接入真实内容，因此使用统一的占位框架。
+ * 内容接入后，请在此替换为对应的板块组件，并保留 BaseLayout。
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PlaceholderSection from '@/components/ui/PlaceholderSection.astro';
+---
+
+<BaseLayout title="Blog" description="技术文章、个人思考与创作记录。">
+  <PlaceholderSection
+    title="Blog"
+    titleZh="梦澄博客"
+    description="技术文章、个人思考与创作记录。"
+    anchor="/#updates"
+    upcoming={['技术文章', '开发笔记', '阅读笔记与随想']}
+  />
+</BaseLayout>

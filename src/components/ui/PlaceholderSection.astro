@@ -1,0 +1,134 @@
+---
+/**
+ * 子页面占位框架。
+ *
+ * 所有尚未接入真实内容的板块共用这一个组件：
+ *   · 保持全站一致的排版与空间节奏
+ *   · 明确标注「建设中」，不伪装成已完成
+ *   · 提供真实的站内链接，不使用无效的占位 URL
+ */
+interface Props {
+  title: string;
+  titleZh: string;
+  description: string;
+  /** 该板块在首页的跳转锚点，用于「返回首页」链接 */
+  anchor?: string;
+  /** 未来接入的内容类型提示 */
+  upcoming?: string[];
+}
+
+const { title, titleZh, description, anchor = '/', upcoming = [] } = Astro.props;
+---
+
+<section class="placeholder">
+  <div class="ys-container ys-container--narrow">
+    <p class="ys-eyebrow">{titleZh}</p>
+
+    <h1 class="placeholder__title">{title}</h1>
+
+    <p class="ys-lede placeholder__lede">{description}</p>
+
+    <div class="placeholder__status" role="status">
+      <span class="placeholder__dot" aria-hidden="true"></span>
+      <span>该板块正在建设中，内容尚未发布。</span>
+    </div>
+
+    {upcoming.length > 0 && (
+      <div class="placeholder__upcoming">
+        <h2 class="placeholder__subtitle">计划收录</h2>
+        <ul>
+          {upcoming.map((item) => (
+            <li>{item}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+
+    <a class="placeholder__back" href={anchor}>
+      ← 返回首页
+    </a>
+  </div>
+</section>
+
+<style>
+  .placeholder {
+    display: grid;
+    align-content: center;
+    min-block-size: 82svh;
+    padding-block: calc(var(--ys-nav-height) + var(--ys-space-2xl)) var(--ys-space-2xl);
+    background: radial-gradient(
+      90% 60% at 50% 0%,
+      var(--ys-night) 0%,
+      var(--ys-abyss) 58%,
+      var(--ys-void) 100%
+    );
+  }
+
+  .placeholder__title {
+    margin-block: var(--ys-space-xs) var(--ys-space-md);
+    font-size: var(--ys-fs-3xl);
+    font-weight: var(--ys-weight-light);
+    letter-spacing: var(--ys-ls-tight);
+  }
+
+  .placeholder__lede {
+    max-inline-size: 36rem;
+  }
+
+  .placeholder__status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ys-space-2xs);
+    margin-block-start: var(--ys-space-lg);
+    padding: var(--ys-space-2xs) var(--ys-space-sm);
+    border: 1px solid var(--ys-border);
+    border-radius: var(--ys-radius-pill);
+    font-size: var(--ys-fs-xs);
+    color: var(--ys-text-muted);
+  }
+
+  .placeholder__dot {
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: 50%;
+    background-color: var(--ys-purple-bright);
+    box-shadow: 0 0 10px var(--ys-accent-glow);
+  }
+
+  .placeholder__upcoming {
+    margin-block-start: var(--ys-space-xl);
+    padding-block-start: var(--ys-space-lg);
+    border-block-start: 1px solid var(--ys-border-subtle);
+  }
+
+  .placeholder__subtitle {
+    margin-block-end: var(--ys-space-sm);
+    font-size: var(--ys-fs-2xs);
+    font-weight: var(--ys-weight-medium);
+    letter-spacing: var(--ys-ls-wider);
+    text-transform: uppercase;
+    color: var(--ys-text-faint);
+  }
+
+  .placeholder__upcoming ul {
+    display: grid;
+    gap: var(--ys-space-2xs);
+  }
+
+  .placeholder__upcoming li {
+    font-size: var(--ys-fs-sm);
+    color: var(--ys-text-secondary);
+  }
+
+  .placeholder__back {
+    display: inline-block;
+    margin-block-start: var(--ys-space-2xl);
+    font-size: var(--ys-fs-sm);
+    color: var(--ys-text-muted);
+    transition: color var(--ys-dur-fast) var(--ys-ease-out);
+  }
+
+  .placeholder__back:hover {
+    color: var(--ys-text);
+  }
+</style>

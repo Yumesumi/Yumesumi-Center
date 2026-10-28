@@ -1,0 +1,166 @@
+---
+/**
+ * 页脚。
+ *
+ * 包含主要导航、外部链接、版权与必要的项目说明。
+ * 外部链接指向真实的对外地址，不使用占位 URL。
+ */
+import { FOOTER_NAV } from '@/data/navigation';
+import { SITE } from '@/data/site';
+import { SORTED_PROJECTS } from '@/data/projects';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="ys-container ys-container--wide">
+    <div class="site-footer__top">
+      <div class="site-footer__brand">
+        <img class="site-footer__mark" src="/brand/logo.svg" alt="" width="40" height="40" />
+        <div>
+          <p class="site-footer__name">{SITE.name}</p>
+          <p class="site-footer__zh">{SITE.nameZh}</p>
+        </div>
+      </div>
+
+      <p class="site-footer__tagline">{SITE.tagline}</p>
+    </div>
+
+    <div class="site-footer__grid">
+      <nav class="site-footer__col" aria-label="页脚导航">
+        <h2 class="site-footer__title">导航</h2>
+        <ul>
+          {FOOTER_NAV.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <nav class="site-footer__col" aria-label="项目导航">
+        <h2 class="site-footer__title">项目</h2>
+        <ul>
+          {SORTED_PROJECTS.map((project) => (
+            <li>
+              <a href={project.href}>{project.nameZh}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="site-footer__col">
+        <h2 class="site-footer__title">联系</h2>
+        <ul>
+          <li>
+            <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+          </li>
+          <li>
+            <a href="https://github.com/" rel="noopener noreferrer" target="_blank">
+              GitHub
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="site-footer__bottom">
+      <p>
+        © {year} {SITE.name}. 保留所有权利。
+      </p>
+      <p class="site-footer__note">本站由 Astro 构建，部署于 GitHub Pages。</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    padding-block: var(--ys-space-2xl) var(--ys-space-lg);
+    border-block-start: 1px solid var(--ys-border-subtle);
+    background-color: var(--ys-void);
+  }
+
+  .site-footer__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ys-space-md);
+    padding-block-end: var(--ys-space-lg);
+    border-block-end: 1px solid var(--ys-border-subtle);
+  }
+
+  .site-footer__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--ys-space-sm);
+  }
+
+  .site-footer__mark {
+    inline-size: 38px;
+    block-size: 38px;
+    opacity: 0.9;
+  }
+
+  .site-footer__name {
+    font-size: var(--ys-fs-sm);
+    font-weight: var(--ys-weight-medium);
+    letter-spacing: var(--ys-ls-wide);
+  }
+
+  .site-footer__zh {
+    font-size: var(--ys-fs-xs);
+    color: var(--ys-text-muted);
+  }
+
+  .site-footer__tagline {
+    max-inline-size: 24rem;
+    font-size: var(--ys-fs-xs);
+    line-height: var(--ys-lh-relaxed);
+    color: var(--ys-text-muted);
+  }
+
+  .site-footer__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: var(--ys-space-lg);
+    padding-block: var(--ys-space-lg);
+  }
+
+  .site-footer__title {
+    margin-block-end: var(--ys-space-sm);
+    font-size: var(--ys-fs-2xs);
+    font-weight: var(--ys-weight-medium);
+    letter-spacing: var(--ys-ls-wider);
+    text-transform: uppercase;
+    color: var(--ys-text-faint);
+  }
+
+  .site-footer__col ul {
+    display: grid;
+    gap: var(--ys-space-2xs);
+  }
+
+  .site-footer__col a {
+    font-size: var(--ys-fs-sm);
+    color: var(--ys-text-secondary);
+    transition: color var(--ys-dur-fast) var(--ys-ease-out);
+  }
+
+  .site-footer__col a:hover,
+  .site-footer__col a:focus-visible {
+    color: var(--ys-text);
+  }
+
+  .site-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ys-space-2xs) var(--ys-space-md);
+    justify-content: space-between;
+    padding-block-start: var(--ys-space-md);
+    border-block-start: 1px solid var(--ys-border-subtle);
+    font-size: var(--ys-fs-xs);
+    color: var(--ys-text-faint);
+  }
+</style>

@@ -1,0 +1,22 @@
+---
+/**
+ * /studio/ —— 梦澄工作室
+ *
+ * 视频、音乐及其他创意作品。
+ *
+ * 该板块尚未接入真实内容，因此使用统一的占位框架。
+ * 内容接入后，请在此替换为对应的板块组件，并保留 BaseLayout。
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PlaceholderSection from '@/components/ui/PlaceholderSection.astro';
+---
+
+<BaseLayout title="Studio" description="视频、音乐及其他创意作品。">
+  <PlaceholderSection
+    title="Studio"
+    titleZh="梦澄工作室"
+    description="视频、音乐及其他创意作品。"
+    anchor="/#projects"
+    upcoming={['影像作品', '音乐作品', '创作过程记录']}
+  />
+</BaseLayout>

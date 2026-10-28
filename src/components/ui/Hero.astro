@@ -1,0 +1,268 @@
+---
+/**
+ * 首页 Hero —— Phase 1 占位版本。
+ *
+ * 当前实现是纯静态的排版原型，用于先验证品牌字标的字号、字距、留白与重心。
+ * Phase 2 会在此基础上接入 React Three Fiber 的实时 3D 场景：
+ *   · 中央半透明几何主体
+ *   · 雾气 / 环境光 / 视差
+ *   · 随滚动推进的镜头时间轴
+ *
+ * 因此这里刻意把「文字层」与「场景层」分成两个独立区块，
+ * Phase 2 只需替换 <div class="hero__scene"> 的内容，不必重排结构。
+ */
+import { SITE } from '@/data/site';
+---
+
+<section class="hero" data-hero>
+  <!-- 场景层：Phase 2 替换为 WebGL 画布 -->
+  <div class="hero__scene" data-hero-scene aria-hidden="true">
+    <div class="hero__glow"></div>
+    <div class="hero__geometry"></div>
+  </div>
+
+  <!-- 文字层 -->
+  <div class="hero__content ys-container ys-container--wide">
+    <p class="hero__eyebrow">{SITE.nameZh}</p>
+
+    <h1 class="hero__wordmark">
+      <span class="hero__wordmark-line">YUMESUMI</span>
+      <span class="hero__wordmark-line">CENTER</span>
+    </h1>
+
+    <p class="hero__lede">{SITE.tagline}</p>
+
+    <div class="hero__actions">
+      <a class="hero__cta" href="/projects/">
+        <span>进入项目</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+          <path
+            d="M5 12h14M13 6l6 6-6 6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          ></path>
+        </svg>
+      </a>
+
+      <a class="hero__scroll" href="#introduction">
+        <span class="hero__scroll-line" aria-hidden="true"></span>
+        <span>继续探索</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: grid;
+    align-content: center;
+    min-block-size: 100svh;
+    padding-block: calc(var(--ys-nav-height) + var(--ys-space-xl)) var(--ys-space-2xl);
+    overflow: clip;
+    background: radial-gradient(
+      120% 80% at 50% 8%,
+      var(--ys-deep) 0%,
+      var(--ys-night) 42%,
+      var(--ys-abyss) 74%,
+      var(--ys-void) 100%
+    );
+  }
+
+  /* ---------- 场景层（Phase 1 为纯 CSS 占位） ---------- */
+
+  .hero__scene {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .hero__glow {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    inline-size: min(78vw, 46rem);
+    aspect-ratio: 1;
+    translate: -50% -58%;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgb(109 79 196 / 26%) 0%,
+      rgb(45 31 86 / 16%) 38%,
+      transparent 68%
+    );
+    filter: blur(28px);
+  }
+
+  .hero__geometry {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    inline-size: min(52vw, 26rem);
+    aspect-ratio: 1;
+    /* 后移并压暗，避免与前景字标争夺视觉重心 */
+    translate: -50% -50%;
+    scale: 1.16;
+    rotate: 45deg;
+    border: 1px solid rgb(157 132 232 / 16%);
+    border-radius: 22%;
+    background: linear-gradient(
+      145deg,
+      rgb(185 168 240 / 5%) 0%,
+      rgb(109 79 196 / 2%) 46%,
+      transparent 72%
+    );
+    box-shadow:
+      0 0 120px -40px var(--ys-accent-glow),
+      inset 0 0 80px -30px rgb(157 132 232 / 10%);
+  }
+
+  /* ---------- 文字层 ---------- */
+
+  .hero__content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .hero__eyebrow {
+    margin-block-end: var(--ys-space-md);
+    font-size: var(--ys-fs-2xs);
+    font-weight: var(--ys-weight-medium);
+    letter-spacing: var(--ys-ls-widest);
+    text-transform: uppercase;
+    color: var(--ys-text-muted);
+  }
+
+  .hero__wordmark {
+    display: grid;
+    gap: 0.04em;
+    margin: 0;
+    font-size: var(--ys-fs-display);
+    font-weight: var(--ys-weight-thin);
+    line-height: var(--ys-lh-tight);
+    letter-spacing: var(--ys-ls-tight);
+    color: var(--ys-text);
+    /* 柔光而非锐利发光，保持冷白字的干净边缘 */
+    text-shadow: 0 0 90px rgb(13 11 26 / 70%);
+  }
+
+  .hero__wordmark-line {
+    display: block;
+  }
+
+  .hero__lede {
+    max-inline-size: 34rem;
+    margin-block-start: var(--ys-space-lg);
+    margin-inline: auto;
+    font-size: var(--ys-fs-base);
+    line-height: var(--ys-lh-relaxed);
+    color: var(--ys-text-secondary);
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ys-space-lg);
+    margin-block-start: var(--ys-space-xl);
+  }
+
+  .hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ys-space-2xs);
+    padding: var(--ys-space-xs) var(--ys-space-md);
+    border: 1px solid var(--ys-border-strong);
+    border-radius: var(--ys-radius-pill);
+    font-size: var(--ys-fs-sm);
+    font-weight: var(--ys-weight-medium);
+    letter-spacing: var(--ys-ls-wide);
+    color: var(--ys-text);
+    transition:
+      border-color var(--ys-dur-base) var(--ys-ease-out),
+      background-color var(--ys-dur-base) var(--ys-ease-out),
+      transform var(--ys-dur-base) var(--ys-ease-out);
+  }
+
+  .hero__cta:hover,
+  .hero__cta:focus-visible {
+    border-color: var(--ys-purple);
+    background-color: rgb(109 79 196 / 14%);
+    transform: translateY(-2px);
+  }
+
+  .hero__cta svg {
+    transition: transform var(--ys-dur-base) var(--ys-ease-out);
+  }
+
+  .hero__cta:hover svg {
+    transform: translateX(3px);
+  }
+
+  .hero__scroll {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ys-space-2xs);
+    font-size: var(--ys-fs-2xs);
+    letter-spacing: var(--ys-ls-wider);
+    text-transform: uppercase;
+    color: var(--ys-text-muted);
+    transition: color var(--ys-dur-base) var(--ys-ease-out);
+  }
+
+  .hero__scroll:hover {
+    color: var(--ys-text-secondary);
+  }
+
+  .hero__scroll-line {
+    position: relative;
+    display: block;
+    inline-size: 1px;
+    block-size: 2.6rem;
+    background: linear-gradient(to bottom, transparent, var(--ys-purple));
+    overflow: hidden;
+  }
+
+  .hero__scroll-line::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inline-size: 100%;
+    block-size: 40%;
+    background: var(--ys-lavender);
+    animation: ys-scroll-cue 2.4s var(--ys-ease-smooth) infinite;
+  }
+
+  @keyframes ys-scroll-cue {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(250%);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .hero {
+      min-block-size: 92svh;
+    }
+
+    .hero__geometry {
+      inline-size: min(72vw, 17rem);
+    }
+
+    .hero__lede {
+      font-size: var(--ys-fs-sm);
+    }
+
+    .hero__actions {
+      flex-direction: column;
+      gap: var(--ys-space-md);
+    }
+  }
+</style>

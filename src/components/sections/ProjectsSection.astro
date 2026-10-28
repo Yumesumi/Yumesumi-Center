@@ -1,0 +1,266 @@
+---
+/**
+ * 首页 · Section C — Featured Projects
+ *
+ * 每个项目使用**不同的构图**（feature / split / wide / offset），
+ * 而不是重复的卡片网格。项目清单来自 src/data/projects.ts。
+ *
+ * 共享全局设计规范：相同的字号阶梯、字距、圆角与边框语言；
+ * 差异只体现在比例、留白与色彩重心上。
+ */
+import { SORTED_PROJECTS } from '@/data/projects';
+---
+
+<section class="projects" id="projects">
+  <div class="ys-container ys-container--wide">
+    <header class="projects__head">
+      <p class="ys-eyebrow">Featured Projects</p>
+      <h2 class="projects__title">正在生长的项目</h2>
+    </header>
+
+    <ul class="projects__list">
+      {SORTED_PROJECTS.map((project, index) => (
+        <li class:list={['project', `project--${project.layout}`]}>
+          <a
+            class="project__link"
+            href={project.href}
+            style={`--project-accent: var(${project.accentVar})`}
+          >
+            <div class="project__media" aria-hidden="true">
+              <span class="project__media-shape" />
+              <span class="project__index">{String(index + 1).padStart(2, '0')}</span>
+            </div>
+
+            <div class="project__body">
+              <h3 class="project__name">{project.name}</h3>
+              <p class="project__name-zh">{project.nameZh}</p>
+              <p class="project__summary">{project.summary}</p>
+              <span class="project__cta">
+                查看项目
+                <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">
+                  <path
+                    d="M5 12h14M13 6l6 6-6 6"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+            </div>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .projects {
+    position: relative;
+    padding-block: var(--ys-section-pad);
+    background-color: var(--ys-void);
+  }
+
+  .projects__head {
+    margin-block-end: var(--ys-space-xl);
+  }
+
+  .projects__title {
+    margin-block-start: var(--ys-space-xs);
+    font-size: var(--ys-fs-2xl);
+    font-weight: var(--ys-weight-light);
+    letter-spacing: var(--ys-ls-tight);
+  }
+
+  .projects__list {
+    display: grid;
+    gap: var(--ys-space-2xl);
+  }
+
+  /* ---------- 构图 A：feature —— 大幅媒体在上，文字在下 ---------- */
+
+  .project--feature .project__link {
+    display: grid;
+    gap: var(--ys-space-lg);
+  }
+
+  .project--feature .project__media {
+    aspect-ratio: 21 / 9;
+  }
+
+  .project--feature .project__name {
+    font-size: var(--ys-fs-2xl);
+  }
+
+  /* ---------- 构图 B：split —— 媒体与文字左右并置 ---------- */
+
+  .project--split .project__link {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: var(--ys-space-xl);
+  }
+
+  .project--split .project__media {
+    aspect-ratio: 4 / 5;
+  }
+
+  /* ---------- 构图 C：wide —— 窄媒体 + 通栏文字 ---------- */
+
+  .project--wide .project__link {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    align-items: end;
+    gap: var(--ys-space-xl);
+  }
+
+  .project--wide .project__media {
+    aspect-ratio: 16 / 7;
+  }
+
+  /* ---------- 构图 D：offset —— 媒体偏移，与前一区块错位 ---------- */
+
+  .project--offset .project__link {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    gap: var(--ys-space-xl);
+  }
+
+  .project--offset .project__media {
+    aspect-ratio: 1;
+    margin-block-start: var(--ys-space-lg);
+  }
+
+  /* ---------- 通用 ---------- */
+
+  .project__link {
+    display: block;
+    color: inherit;
+  }
+
+  .project__media {
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid var(--ys-border-subtle);
+    border-radius: var(--ys-radius-lg);
+    background:
+      radial-gradient(
+        90% 120% at 30% 0%,
+        color-mix(in srgb, var(--project-accent) 14%, transparent) 0%,
+        transparent 62%
+      ),
+      var(--ys-night);
+    transition: border-color var(--ys-dur-slow) var(--ys-ease-out);
+  }
+
+  .project__link:hover .project__media {
+    border-color: color-mix(in srgb, var(--project-accent) 34%, transparent);
+  }
+
+  .project__media-shape {
+    inline-size: 34%;
+    aspect-ratio: 1;
+    rotate: 45deg;
+    border: 1px solid color-mix(in srgb, var(--project-accent) 40%, transparent);
+    border-radius: 18%;
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--project-accent) 12%, transparent) 0%,
+      transparent 70%
+    );
+    transition:
+      rotate var(--ys-dur-cinematic) var(--ys-ease-emphasized),
+      scale var(--ys-dur-cinematic) var(--ys-ease-emphasized);
+  }
+
+  .project__link:hover .project__media-shape {
+    rotate: 135deg;
+    scale: 1.06;
+  }
+
+  .project__index {
+    position: absolute;
+    inset-block-start: var(--ys-space-sm);
+    inset-inline-start: var(--ys-space-sm);
+    font-size: var(--ys-fs-2xs);
+    letter-spacing: var(--ys-ls-wide);
+    color: var(--ys-text-faint);
+  }
+
+  .project__body {
+    padding-block-start: var(--ys-space-sm);
+  }
+
+  .project__name {
+    font-size: var(--ys-fs-xl);
+    font-weight: var(--ys-weight-light);
+    letter-spacing: var(--ys-ls-snug);
+    transition: color var(--ys-dur-base) var(--ys-ease-out);
+  }
+
+  .project__link:hover .project__name {
+    color: var(--ys-lavender-soft);
+  }
+
+  .project__name-zh {
+    margin-block-start: var(--ys-space-3xs);
+    font-size: var(--ys-fs-sm);
+    color: var(--ys-text-muted);
+  }
+
+  .project__summary {
+    margin-block-start: var(--ys-space-sm);
+    max-inline-size: 34rem;
+    font-size: var(--ys-fs-sm);
+    line-height: var(--ys-lh-relaxed);
+    color: var(--ys-text-secondary);
+  }
+
+  .project__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ys-space-3xs);
+    margin-block-start: var(--ys-space-md);
+    font-size: var(--ys-fs-2xs);
+    font-weight: var(--ys-weight-medium);
+    letter-spacing: var(--ys-ls-wider);
+    text-transform: uppercase;
+    color: var(--project-accent);
+  }
+
+  .project__cta svg {
+    transition: transform var(--ys-dur-base) var(--ys-ease-out);
+  }
+
+  .project__link:hover .project__cta svg {
+    transform: translateX(4px);
+  }
+
+  @media (max-width: 1023px) {
+    .project--split .project__link,
+    .project--wide .project__link,
+    .project--offset .project__link {
+      grid-template-columns: 1fr;
+      gap: var(--ys-space-md);
+    }
+
+    .project--offset .project__media {
+      margin-block-start: 0;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .projects__list {
+      gap: var(--ys-space-xl);
+    }
+
+    .project--feature .project__media {
+      aspect-ratio: 4 / 3;
+    }
+  }
+</style>

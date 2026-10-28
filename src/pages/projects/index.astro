@@ -1,0 +1,176 @@
+---
+/**
+ * /projects/ —— 项目总览
+ *
+ * 与首页 Section C 相比，这里是完整的项目索引，包含尚未在首页重点展示的项目。
+ * 复用同一份数据源 src/data/projects.ts，避免两处维护。
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { SORTED_PROJECTS } from '@/data/projects';
+---
+
+<BaseLayout
+  title="Projects"
+  description="Yumesumi Center 的项目总览：梦澄指数、梦澄博客、Minecraft 世界与模组工坊、Yumesumi Labs 与 Yumesumi Studio。"
+>
+  <section class="projects-page">
+    <div class="ys-container">
+      <header class="projects-page__head">
+        <p class="ys-eyebrow">Projects</p>
+        <h1 class="projects-page__title">全部项目</h1>
+        <p class="ys-lede projects-page__lede">
+          梦澄中心下设的全部板块。它们的成熟度各不相同，但都属于同一个持续生长的项目群。
+        </p>
+      </header>
+
+      <ul class="projects-page__list">
+        {SORTED_PROJECTS.map((project, index) => (
+          <li class="project-card" style={`--card-accent: var(${project.accentVar})`}>
+            <a class="project-card__link" href={project.href}>
+              <span class="project-card__index">{String(index + 1).padStart(2, '0')}</span>
+
+              <div class="project-card__head">
+                <h2 class="project-card__name">{project.name}</h2>
+                <p class="project-card__name-zh">{project.nameZh}</p>
+              </div>
+
+              <p class="project-card__summary">{project.summary}</p>
+
+              <span class="project-card__status">
+                {project.status === 'live' ? '已上线' : '建设中'}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .projects-page {
+    padding-block: calc(var(--ys-nav-height) + var(--ys-space-2xl)) var(--ys-space-2xl);
+    background: radial-gradient(
+      90% 55% at 50% 0%,
+      var(--ys-night) 0%,
+      var(--ys-abyss) 60%,
+      var(--ys-void) 100%
+    );
+    min-block-size: 100svh;
+  }
+
+  .projects-page__head {
+    max-inline-size: 44rem;
+    margin-block-end: var(--ys-space-2xl);
+  }
+
+  .projects-page__title {
+    margin-block: var(--ys-space-xs) var(--ys-space-md);
+    font-size: var(--ys-fs-3xl);
+    font-weight: var(--ys-weight-light);
+    letter-spacing: var(--ys-ls-tight);
+  }
+
+  .projects-page__list {
+    display: grid;
+    gap: var(--ys-space-md);
+  }
+
+  .project-card {
+    border: 1px solid var(--ys-border-subtle);
+    border-radius: var(--ys-radius-lg);
+    background-color: var(--ys-night);
+    transition:
+      border-color var(--ys-dur-slow) var(--ys-ease-out),
+      transform var(--ys-dur-slow) var(--ys-ease-out),
+      background-color var(--ys-dur-slow) var(--ys-ease-out);
+  }
+
+  .project-card:hover {
+    border-color: color-mix(in srgb, var(--card-accent) 34%, transparent);
+    background-color: var(--ys-deep);
+    transform: translateY(-2px);
+  }
+
+  .project-card__link {
+    display: grid;
+    grid-template-columns: 3rem 1fr auto;
+    grid-template-areas:
+      'index head status'
+      'index summary status';
+    align-items: start;
+    gap: var(--ys-space-2xs) var(--ys-space-md);
+    padding: var(--ys-space-lg);
+  }
+
+  .project-card__index {
+    grid-area: index;
+    font-size: var(--ys-fs-2xs);
+    letter-spacing: var(--ys-ls-wide);
+    color: var(--ys-text-faint);
+    padding-block-start: 0.35em;
+  }
+
+  .project-card__head {
+    grid-area: head;
+  }
+
+  .project-card__name {
+    font-size: var(--ys-fs-lg);
+    font-weight: var(--ys-weight-light);
+    letter-spacing: var(--ys-ls-snug);
+    transition: color var(--ys-dur-base) var(--ys-ease-out);
+  }
+
+  .project-card:hover .project-card__name {
+    color: var(--card-accent);
+  }
+
+  .project-card__name-zh {
+    margin-block-start: var(--ys-space-3xs);
+    font-size: var(--ys-fs-xs);
+    color: var(--ys-text-muted);
+  }
+
+  .project-card__summary {
+    grid-area: summary;
+    max-inline-size: 38rem;
+    margin-block-start: var(--ys-space-2xs);
+    font-size: var(--ys-fs-sm);
+    line-height: var(--ys-lh-relaxed);
+    color: var(--ys-text-secondary);
+  }
+
+  .project-card__status {
+    grid-area: status;
+    padding: var(--ys-space-3xs) var(--ys-space-xs);
+    border: 1px solid var(--ys-border);
+    border-radius: var(--ys-radius-pill);
+    font-size: var(--ys-fs-3xs);
+    letter-spacing: var(--ys-ls-wide);
+    color: var(--ys-text-muted);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 767px) {
+    .project-card__link {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        'index'
+        'head'
+        'summary'
+        'status';
+      gap: var(--ys-space-2xs);
+      padding: var(--ys-space-md);
+    }
+
+    .project-card__index {
+      padding-block-start: 0;
+    }
+
+    .project-card__status {
+      justify-self: start;
+      margin-block-start: var(--ys-space-sm);
+    }
+  }
+</style>

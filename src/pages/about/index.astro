@@ -1,0 +1,22 @@
+---
+/**
+ * /about/ —— 关于 Yumesumi
+ *
+ * Yumesumi 的个人介绍、创作理念与项目历程。
+ *
+ * 该板块尚未接入真实内容，因此使用统一的占位框架。
+ * 内容接入后，请在此替换为对应的板块组件，并保留 BaseLayout。
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PlaceholderSection from '@/components/ui/PlaceholderSection.astro';
+---
+
+<BaseLayout title="About" description="Yumesumi 的个人介绍、创作理念与项目历程。">
+  <PlaceholderSection
+    title="About"
+    titleZh="关于 Yumesumi"
+    description="Yumesumi 的个人介绍、创作理念与项目历程。"
+    anchor="/#about"
+    upcoming={['个人简介与创作理念', '项目时间线', '使用的技术与工具']}
+  />
+</BaseLayout>

@@ -1,0 +1,30 @@
+---
+/**
+ * 梦澄中心 · 首页
+ *
+ * 结构：
+ *   A. Hero          —— 沉浸式首屏（Phase 2 接入 3D 场景）
+ *   B. Introduction  —— 极少量文字的定位说明
+ *   C. Projects      —— 重点项目，各自独立构图
+ *   D. Digital Worlds—— 项目之间的关系
+ *   E. Latest Updates—— 最近动态
+ *   F. About         —— 个人简介与项目时间线
+ *   G. Footer        —— 位于 BaseLayout 中
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/ui/Hero.astro';
+import IntroSection from '@/components/sections/IntroSection.astro';
+import ProjectsSection from '@/components/sections/ProjectsSection.astro';
+import WorldsSection from '@/components/sections/WorldsSection.astro';
+import UpdatesSection from '@/components/sections/UpdatesSection.astro';
+import AboutSection from '@/components/sections/AboutSection.astro';
+---
+
+<BaseLayout>
+  <Hero />
+  <IntroSection />
+  <ProjectsSection />
+  <WorldsSection />
+  <UpdatesSection />
+  <AboutSection />
+</BaseLayout>

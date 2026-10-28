@@ -1,0 +1,102 @@
+---
+/**
+ * Yumesumi Center · 基础布局
+ *
+ * 负责：文档骨架、head 元信息、字体预加载、跳转到主内容的无障碍链接，
+ * 以及全站共享的导航与页脚。
+ *
+ * 页面级内容通过 <slot /> 注入。
+ */
+import { SITE } from '@/data/site';
+import SiteNav from '@/components/ui/SiteNav.astro';
+import SiteFooter from '@/components/ui/SiteFooter.astro';
+
+// 全局样式：设计变量 + reset + 基础排版。
+// 必须在此导入——Astro 不会自动引入 src/styles 下的文件，
+// 而所有组件都依赖 tokens.css 提供的 CSS 变量。
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** 覆盖默认 og:image */
+  ogImage?: string;
+  /** 页面级主题色，用于强调当前板块 */
+  accent?: string;
+}
+
+const {
+  title,
+  description = SITE.description,
+  ogImage = SITE.ogImage,
+  accent = 'var(--ys-lavender)',
+} = Astro.props;
+
+const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.nameZh}`;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
+const ogImageUrl = new URL(ogImage, Astro.site ?? SITE.url);
+---
+
+<!doctype html>
+<html lang={SITE.lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageUrl.href} />
+    <meta property="og:url" content={canonical.href} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+
+    <meta name="theme-color" content="#05050c" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- 品牌图标 -->
+    <link rel="icon" href="/brand/logo.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/brand/logo.svg" />
+
+    <!--
+      预加载拉丁字体分片：首屏字标 YUMESUMI CENTER 属于拉丁字符集，
+      提前请求可让 LCP 更早达成。中文分片按需加载，不做预加载。
+    -->
+    <link
+      rel="preload"
+      href="/fonts/misans-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+
+    <link rel="stylesheet" href="/fonts/fonts.css" />
+
+    <style define:vars={{ accent }}>
+      :root {
+        --ys-page-accent: var(--accent);
+      }
+    </style>
+  </head>
+
+  <body>
+    <a class="ys-skip-link" href="#main">
+      跳转到主要内容
+    </a>
+
+    <SiteNav />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <SiteFooter />
+  </body>
+</html>

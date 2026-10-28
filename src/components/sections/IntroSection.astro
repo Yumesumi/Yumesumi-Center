@@ -1,0 +1,59 @@
+---
+/**
+ * 首页 · Section B — Introduction
+ *
+ * 用极少量文字说明 Yumesumi Center 是什么。
+ * 不堆砌形容词，不罗列功能点。
+ */
+---
+
+<section class="intro" id="introduction">
+  <div class="ys-container">
+    <div class="intro__inner">
+      <p class="ys-eyebrow">Introduction</p>
+
+      <p class="intro__statement">
+        梦澄中心是一个连接<span class="intro__accent">技术项目</span>、
+        <span class="intro__accent">数字世界</span>与<span class="intro__accent">个人创作</span>
+        的空间。
+      </p>
+
+      <p class="intro__detail">
+        这里收录了 Yumesumi 正在做的各个项目——从模拟金融市场的指数实验，到长期运行的 Minecraft
+        世界与模组工坊，再到软件工具与影像作品。它们各有形态，但共享同一套设计语言与同一个持续生长的时间线。
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .intro {
+    position: relative;
+    padding-block: var(--ys-section-pad);
+    background-color: var(--ys-void);
+  }
+
+  .intro__inner {
+    max-inline-size: 52rem;
+  }
+
+  .intro__statement {
+    margin-block: var(--ys-space-md) var(--ys-space-lg);
+    font-size: var(--ys-fs-2xl);
+    font-weight: var(--ys-weight-light);
+    line-height: var(--ys-lh-snug);
+    letter-spacing: var(--ys-ls-snug);
+    color: var(--ys-text);
+  }
+
+  .intro__accent {
+    color: var(--ys-lavender);
+  }
+
+  .intro__detail {
+    max-inline-size: 40rem;
+    font-size: var(--ys-fs-md);
+    line-height: var(--ys-lh-relaxed);
+    color: var(--ys-text-secondary);
+  }
+</style>

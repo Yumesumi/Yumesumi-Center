@@ -1,0 +1,144 @@
+---
+/**
+ * 首页 · Section D — Digital Worlds
+ *
+ * 展示项目之间的关系，以及梦澄中心作为一个整体的生态结构。
+ * 这一节强调"连接"，因此采用横向递进的版面而非并列卡片。
+ */
+import { SORTED_PROJECTS } from '@/data/projects';
+---
+
+<section class="worlds" id="worlds">
+  <div class="ys-container">
+    <header class="worlds__head">
+      <p class="ys-eyebrow">Digital Worlds</p>
+      <h2 class="worlds__title">彼此相连的世界</h2>
+      <p class="worlds__lede">
+        这些项目并不是彼此独立的孤岛。指数的走势来自积累的记录，模组生长于长期维护的世界，
+        工作室里的作品又把这一切重新编织成可见的形态。
+      </p>
+    </header>
+
+    <ol class="worlds__chain">
+      {SORTED_PROJECTS.map((project, index) => (
+        <li class="worlds__node" style={`--node-accent: var(${project.accentVar})`}>
+          <span class="worlds__node-index">{String(index + 1).padStart(2, '0')}</span>
+          <a class="worlds__node-link" href={project.href}>
+            <span class="worlds__node-name">{project.nameZh}</span>
+            <span class="worlds__node-name-en">{project.name}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .worlds {
+    position: relative;
+    padding-block: var(--ys-section-pad);
+    background-color: var(--ys-abyss);
+    border-block: 1px solid var(--ys-border-subtle);
+  }
+
+  .worlds__head {
+    max-inline-size: 44rem;
+    margin-block-end: var(--ys-space-2xl);
+  }
+
+  .worlds__title {
+    margin-block: var(--ys-space-xs) var(--ys-space-md);
+    font-size: var(--ys-fs-2xl);
+    font-weight: var(--ys-weight-light);
+    letter-spacing: var(--ys-ls-tight);
+  }
+
+  .worlds__lede {
+    font-size: var(--ys-fs-md);
+    line-height: var(--ys-lh-relaxed);
+    color: var(--ys-text-secondary);
+  }
+
+  .worlds__chain {
+    display: grid;
+    gap: 0;
+    counter-reset: node;
+  }
+
+  .worlds__node {
+    position: relative;
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    align-items: center;
+    gap: var(--ys-space-md);
+    padding-block: var(--ys-space-md);
+    border-block-start: 1px solid var(--ys-border-subtle);
+    transition: padding-inline-start var(--ys-dur-slow) var(--ys-ease-out);
+  }
+
+  .worlds__node:last-child {
+    border-block-end: 1px solid var(--ys-border-subtle);
+  }
+
+  .worlds__node:hover {
+    padding-inline-start: var(--ys-space-sm);
+  }
+
+  .worlds__node::before {
+    content: '';
+    position: absolute;
+    inset-block-start: -1px;
+    inset-inline-start: 0;
+    inline-size: 0;
+    block-size: 1px;
+    background-color: var(--node-accent);
+    transition: inline-size var(--ys-dur-slow) var(--ys-ease-out);
+  }
+
+  .worlds__node:hover::before {
+    inline-size: 100%;
+  }
+
+  .worlds__node-index {
+    font-size: var(--ys-fs-2xs);
+    letter-spacing: var(--ys-ls-wide);
+    color: var(--ys-text-faint);
+  }
+
+  .worlds__node-link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--ys-space-sm);
+  }
+
+  .worlds__node-name {
+    font-size: var(--ys-fs-lg);
+    font-weight: var(--ys-weight-light);
+    color: var(--ys-text);
+    transition: color var(--ys-dur-base) var(--ys-ease-out);
+  }
+
+  .worlds__node-link:hover .worlds__node-name {
+    color: var(--node-accent);
+  }
+
+  .worlds__node-name-en {
+    font-size: var(--ys-fs-2xs);
+    letter-spacing: var(--ys-ls-wide);
+    text-transform: uppercase;
+    color: var(--ys-text-faint);
+  }
+
+  @media (max-width: 767px) {
+    .worlds__node {
+      grid-template-columns: 2.5rem 1fr;
+      gap: var(--ys-space-sm);
+    }
+
+    .worlds__node-link {
+      flex-direction: column;
+      gap: var(--ys-space-3xs);
+    }
+  }
+</style>

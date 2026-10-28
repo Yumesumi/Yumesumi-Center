@@ -1,0 +1,29 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+.astro/
+
+# 环境变量
+.env
+.env.production
+.env.local
+
+# 工具缓存与临时产物
+tools/.logo-diff.png
+
+# 原始字体素材（259MB，已通过 scripts/subset_fonts.py 生成 public/fonts 子集）
+MiSans/
+
+# 编辑器与系统
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# 日志
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
