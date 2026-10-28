@@ -121,7 +121,5 @@ rmSync(STAGE, { recursive: true, force: true });
 
 /* ---------- 4. 完成 ---------- */
 console.log('[deploy] 4/4 已推送到远端，GitHub Pages 正在重新发布');
-console.log(
-  `[deploy] 站点地址：${run('git', ['config', '--get', 'remote.origin.url'], { quiet: true }).trim()}`,
-);
+console.log('[deploy] 站点地址：https://yumesumi.github.io/Yumesumi-Center/');
 console.log('[deploy] 提示：发布通常在 1-2 分钟内生效，可用 tools/verify-production.mjs 验证');

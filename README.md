@@ -12,7 +12,7 @@
 | 3D   | Three.js 0.182.0 + React Three Fiber 9.8.2 + Drei 10.7.9 | 独立可卸载的场景组件                |
 | 动效 | GSAP 3.15.0（含 ScrollTrigger）                          | 时间轴与滚动叙事                    |
 | 滚动 | Lenis 1.3.27                                             | 平滑滚动增强（Phase 3 接入）        |
-| 部署 | GitHub Actions → GitHub Pages                            | 项目仓库，路径 `/Yumesumi-Center/`  |
+| 部署 | GitHub Pages（gh-pages 分支发布，不使用 Actions）        | 项目仓库，路径 `/Yumesumi-Center/`  |
 
 > **为什么 three 锁定 0.182.0**：three 自 0.183 起弃用 `THREE.Clock`，
 > 而 R3F 9.8.2 内部仍在使用它，会在控制台留下警告。
@@ -34,6 +34,7 @@ npm run dev            # 本地开发服务器
 npm run check          # 类型检查（astro check）
 npm run build          # 生产构建，输出到 dist/
 npm run preview        # 预览构建产物
+npm run deploy         # 构建并发布到 GitHub Pages（gh-pages 分支）
 npm run format         # Prettier 格式化
 npm run assets:logo    # 从 logo矢量图.ai 重新生成 public/brand/logo.svg
 npm run assets:fonts   # 重新生成字体子集 public/fonts/*
@@ -135,9 +136,15 @@ node tools/verify-fallback.mjs  # WebGL 不可用时的降级路径验证
 > 所有站内链接与 `public/` 静态资源都必须带 base 前缀。
 > 组件内用 `import.meta.env.BASE_URL` 拼接，不要硬编码 `/` 开头的路径。
 
-GitHub Actions 在每次推送到 `main` 时自动构建并部署到 GitHub Pages
-（见 `.github/workflows/deploy.yml`）。首次部署需在仓库 Settings → Pages 中
-将 Source 设为 **GitHub Actions**。
+采用**分支发布**模式，不使用 GitHub Actions——本地构建后把产物提交到 `gh-pages` 分支，
+Pages 随即重新发布。发布时机完全可控，不占用 CI 配额，也不需要仓库里的 workflow 文件。
+
+```bash
+npm run deploy    # 构建 → 提交到 gh-pages 分支 → 推送
+```
+
+Pages 的 Source 需设为 **Deploy from a branch** → `gh-pages` / root（已配置好）。
+完整说明与排查清单见 [`docs/deployment.md`](docs/deployment.md)。
 
 ## 内容约定
 
