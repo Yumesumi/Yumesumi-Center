@@ -12,6 +12,7 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "deploy": "node tools/deploy-pages.mjs",
     "check": "astro check",
     "check:watch": "astro check --watch",
     "format": "prettier --write .",
