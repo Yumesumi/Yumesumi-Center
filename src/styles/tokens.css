@@ -141,4 +141,37 @@
   --ys-z-nav: 50;
   --ys-z-menu: 60;
   --ys-z-modal: 70;
+
+  /* ---------- 固定环境层 ---------- */
+  /* 首页背景水印：尺寸、透明度区间与呼吸周期 */
+  --ys-ambient-mark-size: 92vmin;
+  --ys-ambient-mark-opacity-min: 0.03;
+  --ys-ambient-mark-opacity-max: 0.07;
+  --ys-dur-ambient: 34s;
+
+  /* 粒子亮度总衰减：在粒子自身峰值之上再压一层 */
+  --ys-star-attenuation: 0.72;
+
+  /* 极光与薄纱 */
+  --ys-aurora-opacity: 0.55;
+  --ys-dur-aurora-a: 38s;
+  --ys-dur-aurora-b: 52s;
+  /* 薄纱只负责轻微压暗，透明度必须留给固定环境层——否则滚动后粒子会被吃掉 */
+  --ys-veil-void: color-mix(in srgb, var(--ys-void) 30%, transparent);
+  --ys-veil-abyss: color-mix(in srgb, var(--ys-abyss) 38%, transparent);
+
+  /* 科技网格 */
+  --ys-grid-size: 5rem;
+  --ys-grid-line: rgb(157 132 232 / 5%);
+
+  /* 噪点与暗角 */
+  --ys-grain-size: 180px;
+  --ys-grain-opacity: 0.055;
+  --ys-vignette-opacity: 0.5;
+
+  /* ---------- 首屏特效 ---------- */
+  --ys-spotlight-size: 14rem;
+  --ys-dur-scan: 18s;
+  --ys-hud-opacity: 0.6;
+  --ys-ls-cinematic: 0.18em;
 }

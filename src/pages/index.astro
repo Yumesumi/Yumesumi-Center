@@ -12,6 +12,7 @@
  *   G. Footer        —— 位于 BaseLayout 中
  */
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import HomeAmbience from '@/components/ui/HomeAmbience.astro';
 import Hero from '@/components/ui/Hero.astro';
 import IntroSection from '@/components/sections/IntroSection.astro';
 import ProjectsSection from '@/components/sections/ProjectsSection.astro';
@@ -21,6 +22,8 @@ import AboutSection from '@/components/sections/AboutSection.astro';
 ---
 
 <BaseLayout>
+  {/* 固定环境层：不随滚动移动的品牌水印、星空与极光 */}
+  <HomeAmbience />
   <Hero />
   <IntroSection />
   <ProjectsSection />

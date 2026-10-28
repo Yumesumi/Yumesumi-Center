@@ -65,8 +65,9 @@ src/
 │   └── ui/
 │       ├── BaseLayout...           （在 layouts/）
 │       ├── BrandLogo.astro         ★ 品牌标记的唯一入口
-│       ├── Hero.astro              首屏（背景大 Logo + 星空粒子）
-│       ├── StarField.astro         ★ 四芒星粒子层
+│       ├── HomeAmbience.astro      ★ 首页固定环境层（水印 / 极光 / 网格 / 噪点）
+│       ├── Hero.astro              首屏（文字扫光 / 扫描线 / HUD）
+│       ├── StarField.astro         ★ 全屏四芒星漂移粒子层
 │       ├── SiteNav.astro           顶部导航（含移动端全屏菜单）
 │       ├── SiteFooter.astro        页脚
 │       └── PlaceholderSection.astro  子页面统一占位框架
@@ -214,6 +215,9 @@ docs/deployment.md         部署说明
 
 本项目已无客户端组件需求。若将来必须引入，需改用显式 `createRoot` 挂载。
 
+目前只有两处原生内联脚本：导航的滚动状态/移动菜单，以及首屏文字扫光。
+两者都不依赖 `client:*` 与前端框架；扫光在 `prefers-reduced-motion` 下完全不绑定。
+
 ### 7.5 视觉问题的根因常常在放大后才暴露
 
 第一版粒子「几乎看不见」，直觉是调暗，实际是 mask 裁掉了一半。
@@ -222,12 +226,24 @@ docs/deployment.md         部署说明
 判断动画是否真的在动，看 `tools/shoot-particles.mjs` 的「可见数」指标：
 若它单调暴涨，说明元素同涨同落、没有随机感。
 
-### 7.6 Hero 背景大 Logo 的尺寸与位置是调参结果
+### 7.6 首页固定环境层与半透明章节
 
-- 太大（如 720px）→ 菱形框的边会跑出画面，只剩中央四芒星，反而认不出是 Logo
-- 位置不下移 → 四芒星实心区正好压住「梦澄中心」
+品牌水印不再位于 Hero 内部，而是在 `HomeAmbience` 中：`position: fixed` + `92vmin`，
+页面滚动时固定在视口上，且完整呈现整枚标记（不要改回 `100vmax`，16:9 屏幕会裁掉上下两端）。
+它位于 `z-index: 0`、各章节之下——
+因此**章节底色必须是半透明**（`--ys-veil-void` / `--ys-veil-abyss`），
+且章节需保持 `position: relative`，否则水印会被完全遮住、滚动后就消失。
 
-当前值：520px / opacity 0.16 / 位置 53%。改动前先看 `tools/shoot.mjs` 的截图。
+水印透明度在 0.03–0.07 之间缓慢呼吸（`--ys-ambient-mark-opacity-*`）。
+
+章节薄纱（`--ys-veil-void` / `--ys-veil-abyss`）只负责轻微压暗，当前为 30% / 38%。
+**不要调回过高的不透明度**——曾出现过 62% / 70% 把粒子和水印压到不可见的情况，
+滚动离开首屏后看起来就像特效消失了。
+
+粒子层性能约束：**只动画 `transform` / `opacity`，不要给每颗粒子加 `filter`**
+（旧版的逐星 `drop-shadow` 已移除），移动端不渲染尘埃层。
+改动尺寸/透明度/粒子参数前，先看 `tools/shoot.mjs` 的截图，并用
+`tools/shoot-particles.mjs` 确认亮度分布没有同步暴涨。
 
 ---
 

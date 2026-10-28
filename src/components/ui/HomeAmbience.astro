@@ -1,0 +1,210 @@
+---
+/**
+ * 首页 · 固定环境层
+ *
+ * 覆盖整个视口的背景层，position: fixed —— 页面滚动时水印不跟随移动。
+ * 组成（由下至上）：
+ *   · 极光：三团低饱和紫色雾光，缓慢游移，提供空间纵深
+ *   · 科技网格：极淡的等距网格，径向渐隐，是"科技感"的结构底
+ *   · 品牌水印：BrandLogo 完整缩放到视口内，透明度极低并缓慢呼吸（若隐若现）
+ *   · 星空：全屏四芒星粒子与尘埃，缓慢漂移
+ *   · 暗角与噪点：压住边缘、增加胶片颗粒质感
+ *
+ * 层级：本层固定在 z-index 0，位于各章节之下。
+ * 章节底色是半透明薄纱（--ys-veil-*），因此水印会贯穿整个滚动过程。
+ * 所有动画只改变 transform / opacity，交给合成器处理。
+ */
+import BrandLogo from '@/components/ui/BrandLogo.astro';
+import StarField from '@/components/ui/StarField.astro';
+---
+
+<div class="home-ambience" aria-hidden="true">
+  <div class="home-ambience__aurora home-ambience__aurora--a"></div>
+  <div class="home-ambience__aurora home-ambience__aurora--b"></div>
+  <div class="home-ambience__aurora home-ambience__aurora--c"></div>
+
+  <div class="home-ambience__grid"></div>
+
+  <div class="home-ambience__mark">
+    <BrandLogo size="var(--ys-ambient-mark-size)" label="" opacity={1} />
+  </div>
+
+  <StarField />
+
+  <div class="home-ambience__vignette"></div>
+  <div class="home-ambience__grain"></div>
+</div>
+
+<style>
+  .home-ambience {
+    position: fixed;
+    inset: 0;
+    z-index: var(--ys-z-base);
+    overflow: clip;
+    pointer-events: none;
+    contain: layout style paint;
+    isolation: isolate;
+  }
+
+  /* ---------- 极光 ---------- */
+
+  .home-ambience__aurora {
+    position: absolute;
+    border-radius: 50%;
+    opacity: var(--ys-aurora-opacity);
+    animation: ys-aurora-a var(--ys-dur-aurora-a) var(--ys-ease-in-out) infinite alternate;
+  }
+
+  .home-ambience__aurora--a {
+    inset-block-start: -26vmax;
+    inset-inline-start: -18vmax;
+    inline-size: 76vmax;
+    aspect-ratio: 1;
+    background: radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--ys-purple) 24%, transparent) 0%,
+      color-mix(in srgb, var(--ys-purple-deep) 12%, transparent) 42%,
+      transparent 68%
+    );
+  }
+
+  .home-ambience__aurora--b {
+    inset-block-end: -30vmax;
+    inset-inline-end: -22vmax;
+    inline-size: 92vmax;
+    aspect-ratio: 1;
+    background: radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--ys-purple-deep) 34%, transparent) 0%,
+      transparent 70%
+    );
+    animation-name: ys-aurora-b;
+    animation-duration: var(--ys-dur-aurora-b);
+    animation-direction: alternate-reverse;
+  }
+
+  .home-ambience__aurora--c {
+    inset-block-start: -34vmax;
+    inset-inline-start: 50%;
+    inline-size: 110vmax;
+    block-size: 58vmax;
+    translate: -50% 0;
+    background: radial-gradient(
+      ellipse at 50% 0%,
+      color-mix(in srgb, var(--ys-lavender) 12%, transparent) 0%,
+      transparent 66%
+    );
+    animation-name: ys-aurora-c;
+    animation-duration: var(--ys-dur-aurora-a);
+  }
+
+  /* ---------- 科技网格 ---------- */
+
+  .home-ambience__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--ys-grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--ys-grid-line) 1px, transparent 1px);
+    background-size: var(--ys-grid-size) var(--ys-grid-size);
+    /* 径向渐隐：中心可读，四周融入暗部，避免网格线成为视觉噪音 */
+    mask-image: radial-gradient(
+      ellipse 82% 74% at 50% 42%,
+      black 0%,
+      rgb(0 0 0 / 55%) 55%,
+      transparent 100%
+    );
+  }
+
+  /* ---------- 品牌水印 ---------- */
+
+  .home-ambience__mark {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    /*
+      92vmin：完整呈现整枚品牌标记，同时尽可能铺满视口。
+      不用 100vmax —— 在 16:9 屏幕上高度会被裁掉，只剩中间的星形与弧线。
+      也不做偏移 —— 水印必须保持完整、居中。
+    */
+    opacity: var(--ys-ambient-mark-opacity-min);
+    animation: ys-ambient-breathe var(--ys-dur-ambient) var(--ys-ease-in-out) infinite;
+  }
+
+  /* ---------- 暗角与噪点 ---------- */
+
+  .home-ambience__vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 76% 64% at 50% 44%,
+      transparent 0%,
+      color-mix(in srgb, var(--ys-void) 42%, transparent) 68%,
+      var(--ys-void) 100%
+    );
+    opacity: var(--ys-vignette-opacity);
+  }
+
+  .home-ambience__grain {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: var(--ys-grain-size) var(--ys-grain-size);
+    opacity: var(--ys-grain-opacity);
+    mix-blend-mode: soft-light;
+  }
+
+  /* ---------- 动效 ---------- */
+
+  @keyframes ys-ambient-breathe {
+    0%,
+    100% {
+      opacity: var(--ys-ambient-mark-opacity-min);
+    }
+    50% {
+      opacity: var(--ys-ambient-mark-opacity-max);
+    }
+  }
+
+  @keyframes ys-aurora-a {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: 3vmax 2.5vmax;
+    }
+  }
+
+  @keyframes ys-aurora-b {
+    from {
+      translate: 0 0;
+    }
+    to {
+      translate: -3.5vmax -2vmax;
+    }
+  }
+
+  @keyframes ys-aurora-c {
+    from {
+      translate: -50% 0;
+      opacity: calc(var(--ys-aurora-opacity) * 0.7);
+    }
+    to {
+      translate: -50% 2vmax;
+      opacity: var(--ys-aurora-opacity);
+    }
+  }
+
+  /* 减少动态效果：水印保持中间亮度，极光静止 */
+  @media (prefers-reduced-motion: reduce) {
+    .home-ambience__mark {
+      animation: none;
+      opacity: var(--ys-ambient-mark-opacity-max);
+    }
+
+    .home-ambience__aurora {
+      animation: none;
+    }
+  }
+</style>

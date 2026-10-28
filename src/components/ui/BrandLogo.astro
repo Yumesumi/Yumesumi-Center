@@ -13,8 +13,8 @@
  *   · 提供 alt 文本；纯装饰时传空字符串
  */
 interface Props {
-  /** 尺寸（px） */
-  size?: number;
+  /** 尺寸（px 数值，或任意 CSS 长度如 'var(--token)'） */
+  size?: number | string;
   /** 尺寸上限（CSS 长度，如 '78vw'）；不传则不限制 */
   maxSize?: string;
   /** 无障碍标签；纯装饰时传空字符串 */
@@ -35,18 +35,24 @@ const {
 
 const base = import.meta.env.BASE_URL;
 
+/** 数值按 px 处理，字符串视为完整 CSS 长度 */
+const cssSize = typeof size === 'number' ? `${size}px` : size;
+
 /** 有上限时用 min() 表达，保证小屏不溢出 */
 const sizing = maxSize
-  ? `inline-size:min(${size}px,${maxSize}px);block-size:min(${size}px,${maxSize}px)`
-  : `inline-size:${size}px;block-size:${size}px`;
+  ? `inline-size:min(${cssSize},${maxSize});block-size:min(${cssSize},${maxSize})`
+  : `inline-size:${cssSize};block-size:${cssSize}`;
+
+/** width/height 属性只接受数值；CSS 长度由内联样式负责 */
+const intAttr = typeof size === 'number' ? size : undefined;
 ---
 
 <img
   class:list={['ys-logo', className]}
   src={`${base}brand/logo.svg`}
   alt={label}
-  width={size}
-  height={size}
+  width={intAttr}
+  height={intAttr}
   style={`${sizing};opacity:${opacity}`}
 />
 

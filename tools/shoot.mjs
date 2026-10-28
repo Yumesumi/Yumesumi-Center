@@ -131,6 +131,7 @@ mkdirSync(OUT, { recursive: true });
 
 const SHOTS = [
   { route: '/', name: 'home-desktop', width: 1440, height: 900, full: false },
+  { route: '/', name: 'home-scrolled', width: 1440, height: 900, full: false, scroll: 1400 },
   { route: '/', name: 'home-full', width: 1440, height: 900, full: true },
   { route: '/', name: 'home-mobile', width: 390, height: 844, full: false },
   { route: '/projects/', name: 'projects-desktop', width: 1440, height: 900, full: false },
@@ -162,6 +163,22 @@ for (const shot of SHOTS) {
     sessionId,
   );
   await new Promise((r) => setTimeout(r, 400));
+
+  /*
+    固定层（HomeAmbience）只有滚动后才能体现"不跟随页面"的效果，
+    全页截图会把 fixed 元素只画在首个视口内，因此额外提供滚动截图。
+    scroll-behavior 必须临时关掉，否则 scrollTo 是平滑动画，截到中途。
+  */
+  if (shot.scroll) {
+    await send(
+      'Runtime.evaluate',
+      {
+        expression: `document.documentElement.style.scrollBehavior='auto';window.scrollTo(0,${shot.scroll})`,
+      },
+      sessionId,
+    );
+    await new Promise((r) => setTimeout(r, 500));
+  }
 
   const { data } = await send(
     'Page.captureScreenshot',

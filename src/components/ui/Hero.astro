@@ -2,44 +2,46 @@
 /**
  * 首页 Hero
  *
- * 构成：文字层 + 一枚置于其后的巨大品牌标记。
- * 品牌标记直接使用从 logo矢量图.ai 精确提取的真实路径（public/brand/logo.svg），
- * 以低透明度放大到远超字号的尺寸，作为背景图形与空间纵深，
- * 不与前景字标争夺注意力。
+ * 构成：文字层 + 首屏装饰层。
+ * 巨大的品牌标记已上移到固定环境层（HomeAmbience）——
+ * 它不再随页面滚动离开，而是作为整站的底纹持续存在。
+ * 这里保留首屏专属的文字扫光、扫描线与 HUD 角框，
+ * 与固定环境层叠加出纵深与科技感。
  *
- * 纯静态实现——不依赖 WebGL、不需要 JavaScript，
- * 在任何环境下都能完整呈现。
+ * 视觉主体仍是 CSS；文字扫光用一小段原生脚本读取指针位置，
+ * 不引入前端框架，也不使用 Astro 的 client:* 指令。
  */
 import { SITE } from '@/data/site';
-import BrandLogo from '@/components/ui/BrandLogo.astro';
-import StarField from '@/components/ui/StarField.astro';
 
 const base = import.meta.env.BASE_URL;
 const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
 ---
 
 <section class="hero" data-hero>
-  <!--
-    背景层：巨大品牌标记。
-    aria-hidden：装饰性图层，页面标题已完整表达站点身份，
-    屏幕阅读器不需要重复朗读。
-  -->
+  <!-- 装饰层：全部为 aria-hidden 的纯视觉元素 -->
   <div class="hero__backdrop" aria-hidden="true">
-    <StarField />
     <div class="hero__glow"></div>
-    <div class="hero__mark">
-      <BrandLogo size={520} maxSize="78vw" label="" opacity={0.16} />
+    <div class="hero__scan"></div>
+
+    <!-- HUD 角框：四条细线限定的取景框，提供仪器感 -->
+    <div class="hero__hud">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
     </div>
   </div>
 
   <!-- 文字层 -->
   <div class="hero__content ys-container ys-container--wide">
-    <h1 class="hero__wordmark">
+    <h1 class="hero__wordmark" data-spotlight>
       <span class="hero__wordmark-line">YUMESUMI</span>
       <span class="hero__wordmark-line">CENTER</span>
     </h1>
 
-    <p class="hero__eyebrow">{SITE.nameZh}</p>
+    <p class="hero__name-zh" data-spotlight>
+      梦澄中心
+    </p>
 
     <p class="hero__lede">{SITE.tagline}</p>
 
@@ -75,16 +77,19 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     padding-block: calc(var(--ys-nav-height) + var(--ys-space-2xl)) var(--ys-space-2xl);
     overflow: clip;
     isolation: isolate;
+    /*
+      首屏不再使用不透明底：固定环境层的水印与粒子透过这里呈现。
+      只保留一层极淡的顶部紫雾，用来区分首屏与后续章节。
+    */
     background: radial-gradient(
-      120% 80% at 50% 8%,
-      var(--ys-deep) 0%,
-      var(--ys-night) 42%,
-      var(--ys-abyss) 74%,
-      var(--ys-void) 100%
+      120% 78% at 50% 6%,
+      color-mix(in srgb, var(--ys-deep) 46%, transparent) 0%,
+      color-mix(in srgb, var(--ys-night) 26%, transparent) 44%,
+      transparent 76%
     );
   }
 
-  /* ---------- 背景层 ---------- */
+  /* ---------- 装饰层 ---------- */
 
   .hero__backdrop {
     position: absolute;
@@ -94,39 +99,84 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     overflow: hidden;
   }
 
-  /* 中心辉光，为巨大标记提供空气感 */
+  /* 中心辉光，为标题提供空气感 */
   .hero__glow {
     position: absolute;
-    inset-block-start: 50%;
+    inset-block-start: 51%;
     inset-inline-start: 50%;
-    inline-size: min(86vw, 54rem);
+    inline-size: min(92vw, 60rem);
     aspect-ratio: 1;
-    translate: -50% -52%;
+    translate: -50% -50%;
     border-radius: 50%;
     background: radial-gradient(
       circle,
-      color-mix(in srgb, var(--ys-purple) 24%, transparent) 0%,
-      color-mix(in srgb, var(--ys-purple-deep) 14%, transparent) 40%,
+      color-mix(in srgb, var(--ys-purple) 22%, transparent) 0%,
+      color-mix(in srgb, var(--ys-purple-deep) 12%, transparent) 42%,
       transparent 70%
     );
-    filter: blur(32px);
   }
 
-  /*
-    巨大品牌标记。
-    尺寸经过调参：太小则失去存在感，太大则菱形框的边会跑出画面、
-    只剩中央四芒星，反而认不出是 Logo。
-    位置同样经过调整：整体略微下移，让四芒星实心区避开文字带，
-    否则「梦澄中心」会被压在四芒星上难以辨认。
-    保持正立不旋转——Logo 本身是轴对称的菱形，倾斜会破坏其几何秩序。
-  */
-  .hero__mark {
+  /* 扫描线：每隔一段时间自上而下掠过一道极淡的光 */
+  .hero__scan {
     position: absolute;
-    inset-block-start: 53%;
-    inset-inline-start: 50%;
-    display: grid;
-    place-items: center;
-    translate: -50% -50%;
+    inset-inline: 0;
+    inset-block-start: 14%;
+    block-size: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--ys-lavender) 24%, transparent) 28%,
+      color-mix(in srgb, var(--ys-lavender-soft) 42%, transparent) 50%,
+      color-mix(in srgb, var(--ys-lavender) 24%, transparent) 72%,
+      transparent 100%
+    );
+    box-shadow: 0 0 22px var(--ys-accent-glow);
+    opacity: 0;
+    animation: ys-scan-sweep var(--ys-dur-scan) var(--ys-ease-smooth) infinite;
+  }
+
+  /* HUD 角框 */
+  .hero__hud {
+    position: absolute;
+    inset-block-start: calc(var(--ys-nav-height) + var(--ys-space-sm));
+    inset-block-end: var(--ys-space-lg);
+    inset-inline: var(--ys-gutter);
+    opacity: var(--ys-hud-opacity);
+  }
+
+  .hero__hud span {
+    position: absolute;
+    inline-size: clamp(1rem, 2vw, 1.75rem);
+    aspect-ratio: 1;
+    border: 0 solid color-mix(in srgb, var(--ys-lavender) 34%, transparent);
+  }
+
+  .hero__hud span:nth-child(1) {
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    border-block-start-width: 1px;
+    border-inline-start-width: 1px;
+  }
+
+  .hero__hud span:nth-child(2) {
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    border-block-start-width: 1px;
+    border-inline-end-width: 1px;
+  }
+
+  .hero__hud span:nth-child(3) {
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    border-block-end-width: 1px;
+    border-inline-start-width: 1px;
+  }
+
+  .hero__hud span:nth-child(4) {
+    inset-block-end: 0;
+    inset-inline-end: 0;
+    border-block-end-width: 1px;
+    border-inline-end-width: 1px;
   }
 
   /* ---------- 文字层 ---------- */
@@ -137,21 +187,10 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     text-align: center;
   }
 
-  .hero__eyebrow {
-    margin-block: var(--ys-space-sm) var(--ys-space-md);
-    font-size: var(--ys-fs-2xs);
-    font-weight: var(--ys-weight-medium);
-    letter-spacing: var(--ys-ls-widest);
-    text-transform: uppercase;
-    color: var(--ys-text-muted);
-    /* 背景标记中央是四芒星，小字叠在上面会看不清——加一层暗底托住 */
-    padding-block: var(--ys-space-3xs);
-    text-shadow:
-      0 0 12px var(--ys-void),
-      0 0 24px var(--ys-void);
-  }
-
   .hero__wordmark {
+    /* 由 Hero 脚本写入的指针坐标；默认落在中心，无 JS 时也是完整的高光 */
+    --mx: 50%;
+    --my: 50%;
     display: grid;
     gap: 0.04em;
     margin: 0;
@@ -159,13 +198,85 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     font-weight: var(--ys-weight-thin);
     line-height: var(--ys-lh-tight);
     letter-spacing: var(--ys-ls-tight);
-    color: var(--ys-text);
-    /* 柔光而非锐利发光，保持冷白字的干净边缘 */
-    text-shadow: 0 0 90px color-mix(in srgb, var(--ys-void) 70%, transparent);
+    /*
+      上层：跟随鼠标的径向高光；下层：冷白到薰衣草的静态渐变。
+      高光区之外露出较暗的底层色，文字会随指针位置被"扫"亮。
+    */
+    background-image:
+      radial-gradient(
+        ellipse calc(var(--ys-spotlight-size) * 1.25) calc(var(--ys-spotlight-size) * 0.6) at
+          var(--mx) var(--my),
+        var(--ys-text) 0%,
+        color-mix(in srgb, var(--ys-text) 62%, transparent) 46%,
+        transparent 80%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--ys-text) 52%, var(--ys-lavender)) 20%,
+        color-mix(in srgb, var(--ys-lavender) 88%, var(--ys-text)) 78%,
+        color-mix(in srgb, var(--ys-lavender) 82%, var(--ys-purple-bright)) 100%
+      );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 36px color-mix(in srgb, var(--ys-void) 85%, transparent));
   }
 
   .hero__wordmark-line {
     display: block;
+  }
+
+  /*
+    中文名只比英文标题小一档（display → 4xl）。
+    字距放大、字重极细，与两侧渐隐细线一起构成"题名"的仪式感。
+  */
+  .hero__name-zh {
+    --mx: 50%;
+    --my: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ys-space-md);
+    margin-block: var(--ys-space-sm) 0;
+    padding-inline-start: var(--ys-ls-cinematic);
+    font-size: var(--ys-fs-4xl);
+    font-weight: var(--ys-weight-thin);
+    line-height: 1.12;
+    letter-spacing: var(--ys-ls-cinematic);
+    background-image:
+      radial-gradient(
+        ellipse calc(var(--ys-spotlight-size) * 1.15) calc(var(--ys-spotlight-size) * 0.55) at
+          var(--mx) var(--my),
+        var(--ys-text) 0%,
+        color-mix(in srgb, var(--ys-text) 60%, transparent) 46%,
+        transparent 80%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--ys-text) 70%, var(--ys-lavender)) 0%,
+        color-mix(in srgb, var(--ys-text) 38%, var(--ys-lavender)) 100%
+      );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 22px var(--ys-void));
+  }
+
+  .hero__name-zh::before,
+  .hero__name-zh::after {
+    content: '';
+    flex: 0 0 auto;
+    inline-size: clamp(1.5rem, 7vw, 4.5rem);
+    block-size: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--ys-lavender) 55%, transparent) 100%
+    );
+  }
+
+  .hero__name-zh::after {
+    transform: scaleX(-1);
   }
 
   .hero__lede {
@@ -175,7 +286,6 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     font-size: var(--ys-fs-base);
     line-height: var(--ys-lh-relaxed);
     color: var(--ys-text-secondary);
-    /* 背景标记的底部叶形会穿过这一带，用暗底托住保证可读性 */
     text-shadow:
       0 0 14px var(--ys-void),
       0 0 28px var(--ys-void);
@@ -204,6 +314,7 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     transition:
       border-color var(--ys-dur-base) var(--ys-ease-out),
       background-color var(--ys-dur-base) var(--ys-ease-out),
+      box-shadow var(--ys-dur-base) var(--ys-ease-out),
       transform var(--ys-dur-base) var(--ys-ease-out);
   }
 
@@ -211,6 +322,9 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
   .hero__cta:focus-visible {
     border-color: var(--ys-purple);
     background-color: color-mix(in srgb, var(--ys-purple) 14%, transparent);
+    box-shadow:
+      var(--ys-shadow-glow),
+      inset 0 0 18px color-mix(in srgb, var(--ys-purple) 12%, transparent);
     transform: translateY(-2px);
   }
 
@@ -256,6 +370,26 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     animation: ys-scroll-cue 2.4s var(--ys-ease-smooth) infinite;
   }
 
+  /* ---------- 关键帧 ---------- */
+
+  @keyframes ys-scan-sweep {
+    0% {
+      translate: 0 -8vh;
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.45;
+    }
+    52% {
+      opacity: 0.18;
+    }
+    68%,
+    100% {
+      translate: 0 74vh;
+      opacity: 0;
+    }
+  }
+
   @keyframes ys-scroll-cue {
     0% {
       transform: translateY(-100%);
@@ -264,6 +398,8 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
       transform: translateY(250%);
     }
   }
+
+  /* ---------- 响应式与降级 ---------- */
 
   @media (max-width: 767px) {
     .hero {
@@ -278,5 +414,75 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
       flex-direction: column;
       gap: var(--ys-space-md);
     }
+
+    .hero__hud {
+      display: none;
+    }
+
+    .hero__name-zh {
+      gap: var(--ys-space-sm);
+    }
+  }
+
+  /* 减少动态效果：停止扫描 */
+  @media (prefers-reduced-motion: reduce) {
+    .hero__scan {
+      animation: none;
+      opacity: 0;
+    }
   }
 </style>
+
+<script>
+  /**
+   * 首屏文字扫光：把指针位置写进 --mx / --my，文字的径向高光随之移动。
+   * 只写 CSS 变量，绘制与合成交给浏览器；pointermove 用 rAF 节流。
+   * 减少动态效果时完全不绑定，保留默认的居中高光。
+   */
+  function initHeroSpotlight() {
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    if (!hero) return;
+
+    const targets = Array.from(hero.querySelectorAll<HTMLElement>('[data-spotlight]'));
+    if (targets.length === 0) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let frame = 0;
+    let x = 0;
+    let y = 0;
+
+    const paint = () => {
+      frame = 0;
+      for (const el of targets) {
+        const rect = el.getBoundingClientRect();
+        el.style.setProperty('--mx', `${x - rect.left}px`);
+        el.style.setProperty('--my', `${y - rect.top}px`);
+      }
+    };
+
+    const reset = () => {
+      if (frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      }
+      for (const el of targets) {
+        el.style.setProperty('--mx', '50%');
+        el.style.setProperty('--my', '50%');
+      }
+    };
+
+    hero.addEventListener(
+      'pointermove',
+      (event) => {
+        x = event.clientX;
+        y = event.clientY;
+        if (!frame) frame = requestAnimationFrame(paint);
+      },
+      { passive: true },
+    );
+
+    hero.addEventListener('pointerleave', reset);
+  }
+
+  initHeroSpotlight();
+</script>

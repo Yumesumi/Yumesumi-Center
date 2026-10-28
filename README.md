@@ -14,8 +14,9 @@
 | 样式 | 原生 CSS + CSS 变量                               | 无 CSS 框架，变量集中在 tokens.css |
 | 部署 | GitHub Pages（gh-pages 分支发布，不使用 Actions） | 项目仓库，路径 `/Yumesumi-Center/` |
 
-> **没有前端框架依赖**：站点为纯静态 HTML + CSS，不含任何运行时 JavaScript。
-> 首屏不下载 JS，禁用 JavaScript 时内容与样式依然完整（由 `tools/verify-nojs.mjs` 验证）。
+> **没有前端框架依赖**：站点为纯静态 HTML + CSS，无 React/Vue 等运行时。
+> 构建产物为 0 个 JS 文件；导航的滚动状态、移动菜单与首屏文字扫光由少量内联脚本实现。
+> 首屏不下载 JS 文件，禁用 JavaScript 时内容与样式依然完整（由 `tools/verify-nojs.mjs` 验证）。
 >
 > 动效依赖（GSAP / Lenis）尚未安装——按项目约定「不安装没有实际用途的依赖」，
 > 需要时在 Phase 3 再装。
@@ -48,7 +49,7 @@ npm run assets:fonts   # 重新生成字体子集 public/fonts/*
 src/
 ├── components/
 │   ├── sections/     # 首页 A–F 六章节
-│   └── ui/           # 通用 UI 组件（含 BrandLogo、StarField）
+│   └── ui/           # 通用 UI 组件（含 BrandLogo、HomeAmbience、StarField）
 ├── data/             # 项目清单、导航、站点元信息（结构化数据源）
 ├── layouts/          # 页面布局
 ├── pages/            # 路由
@@ -105,22 +106,28 @@ MiSans 原始素材约 259MB。`scripts/subset_fonts.py` 使用可变字体 `MiS
 **禁止**在任何位置用 CSS 方框、边框、`rotate` 等自造「几何占位」——
 那些图形缺少四芒星与装饰弧线，观感上只是空心几何体，无法传达品牌识别。
 
-首页 Hero 的背景层是一枚放大到 520px、透明度 0.16 的品牌标记，
-位于文字之后作为空间与质感。尺寸与位置经过调参：太小则失去存在感，
-太大则菱形框的边会跑出画面、只剩中央四芒星，反而认不出是 Logo。
+首页使用固定环境层 `HomeAmbience`：品牌标记按 `92vmin` 缩放，
+完整呈现整枚标记，以 `position: fixed` 固定在视口上，页面滚动时作为水印持续存在；
+透明度在 0.03–0.07 之间缓慢呼吸，若隐若现。
+各章节底色是半透明薄纱（`--ys-veil-*`），水印与粒子因此能贯穿整个滚动过程。
+尺寸与透明度经实际截图调参，改动前先看 `tools/shoot.mjs` 的产物。
 
 ### 星空粒子层
 
-`src/components/ui/StarField.astro` 在首屏铺一层微弱闪烁的星点。
+`src/components/ui/StarField.astro` 在固定环境层内铺一层全屏星点，
+粒子在各自不同的闭合轨迹上缓慢漂移。
 粒子形状**取自 Logo 的小四芒星路径**（归一化后作为 CSS mask 复用），
 因此背景星点与品牌标记同源，不是随手画的替代图形。
 
-- 32 颗星形粒子 + 44 颗尘埃点，位置/大小/周期/相位/缓动各不相同
+- 32 颗星形粒子 + 38 颗尘埃点，位置/大小/周期/相位/漂移幅度各不相同
+- 漂移与闪烁只改变 `transform` / `opacity`，粒子不叠加 `filter`；
+  移动端不渲染尘埃层，减少同时参与合成的元素数量
+- 两枚低频流星间歇划过，为画面提供少量高光
 - 关键帧不等分，且最低亮度保留一个底数——星星不会真正消失，
   避免出现「整片天空同时熄灭」的信号灯感
-- 双层遮罩：上下边缘渐隐 + 中央文字区压暗，星点不直接压字标
-- `prefers-reduced-motion` 下停止闪烁，保留静态低亮度
-- **纯 CSS 实现**，站点依然零运行时 JavaScript
+- 边缘渐隐遮罩让星点与页面边界自然衔接
+- `prefers-reduced-motion` 下停止闪烁与漂移，保留静态低亮度
+- **纯 CSS 实现**，不引入额外的运行时 JavaScript
 
 ## 验证
 
@@ -143,7 +150,7 @@ node tools/zoom-particles.mjs    # 粒子层放大 4 倍（核对四芒星形状
 若页面残留任何未加前缀的绝对路径，会立刻 404 并被抓出来。
 
 `verify-nojs.mjs` 会在禁用 JavaScript 的环境下检查内容与样式是否完整。
-站点没有运行时 JS，这项验证确保首屏不依赖任何脚本即可正常阅读。
+站点没有前端框架与外部 JS 文件，这项验证确保首屏不依赖任何脚本即可正常阅读。
 
 ## 部署
 

@@ -1,28 +1,19 @@
 ---
 /**
- * 首屏星空粒子层。
+ * 全屏星空粒子层。
  *
  * 设计要点：
- *   · 粒子形状直接取自 Logo 的四芒星（小星，半径 113.284 的那条路径），
- *     归一化到 0-100 的坐标系后作为 CSS mask 复用——
- *     这样背景里的星点与品牌标记是同一个形状，不是随手画的替代品。
- *   · 闪烁用 CSS 动画实现，站点因此不需要任何 JavaScript。
- *   · 每颗粒子的位置、大小、周期、相位都不同，避免出现可辨识的规律。
- *   · prefers-reduced-motion 下停止闪烁，改为静态低亮度。
+ *   · 粒子形状直接取自 Logo 的四芒星（内层子路径归一化后作为 CSS mask），
+ *     背景星点与品牌标记同源，不是随手画的替代品。
+ *   · 位于固定环境层内，坐标按视口百分比分布，因此覆盖整个页面而非仅首屏。
+ *   · 每颗粒子都在自己的闭合轨迹上缓慢漂移，且周期、相位、幅度各不相同，
+ *     不会出现同涨同落的"信号灯"感。
+ *   · 性能：只动画 transform 与 opacity（合成器属性），粒子不带 filter，
+ *     移动端隐藏尘埃层，减少同时参与合成的元素数量。
+ *   · prefers-reduced-motion 下停止漂移与闪烁，保留静态低亮度。
  */
-import { SITE } from '@/data/site';
 
-/**
- * Logo 中小四芒星的归一化路径。
- *
- * 来源：logo矢量图.ai 中星形的内层子路径（尖角在 398.716 / 512 / 625.284）。
- * 以星心为原点归一化，四个尖角落在 ±50，因此配套的 mask viewBox 必须是
- * '-50 -50 100 100'——用 '0 0 100 100' 会裁掉半个星（只框住右下四分之一）。
- */
-const STAR_PATH =
-  'M0 -50C10.62 -28.24 28.24 -10.62 50 0C28.24 10.62 10.62 28.24 0 50C-10.62 28.24 -28.24 10.62 -50 0C-28.24 -10.62 -10.62 -28.24 0 -50';
-
-/** 确定性伪随机，保证服务端与客户端渲染一致（避免 hydration 抖动） */
+/** 确定性伪随机，保证每次构建产出相同布局 */
 function createRandom(seed: number) {
   let state = seed;
   return () => {
@@ -45,64 +36,91 @@ interface Particle {
   peak: number;
   /** 最暗时的亮度（不会归零，避免整片天空同时熄灭） */
   floor: number;
-  /** 缓动类型下标，让每颗粒子的明暗节奏不同 */
+  /** 缓动类型下标 */
   ease: number;
+  /** 漂移轨迹的横向 / 纵向幅度（vmin） */
+  dx: number;
+  dy: number;
+  driftDuration: number;
+  driftDelay: number;
 }
 
 /**
  * 缓动族。星空的关键是"不整齐"——
  * 若所有粒子共用同一条关键帧曲线，即使周期与相位不同，
  * 它们仍会周期性地同涨同落，看起来像整体在呼吸而不是星空。
- * 混用多种缓动 + 互质的周期，可以打散这种同步感。
  */
 const EASES = ['ease-in-out', 'ease-out', 'ease-in', 'cubic-bezier(0.4, 0, 0.6, 1)'];
 
 const random = createRandom(20261028);
 
-// 四芒星粒子：数量适中，分布在首屏各处
+function createDrift(maxAmplitude: number) {
+  return {
+    dx: (random() * 2 - 1) * (1.5 + random() * maxAmplitude),
+    dy: (random() * 2 - 1) * (1.5 + random() * maxAmplitude),
+    driftDuration: 32 + random() * 48,
+    // 负延迟让每颗粒子从轨迹的不同位置开始，首屏不会整齐划一
+    driftDelay: -random() * 80,
+  };
+}
+
+// 四芒星粒子：大而稀，是画面的焦点
 const STARS: Particle[] = Array.from({ length: 32 }, () => {
-  const size = 8 + random() * 16;
+  const size = 7 + random() * 15;
   // 尺寸越大峰值越低——大星点太亮会喧宾夺主
-  const scale = 1 - (size - 8) / 24;
-  const peak = (0.34 + random() * 0.34) * (0.55 + scale * 0.45);
+  const scale = 1 - (size - 7) / 22;
+  const peak = (0.3 + random() * 0.3) * (0.55 + scale * 0.45);
   return {
     x: random() * 100,
     y: random() * 100,
     size,
-    // 周期拉开差距：5s ~ 17s，互不相同则长期不会同步
-    duration: 5 + random() * 12,
-    // 相位也拉开，超过一个完整周期，保证任意时刻的相位分布是散的
-    delay: random() * 17,
-    // 亮度区间——星点始终可见，只在明暗之间变化
+    // 周期拉开：6s ~ 18s，且相位分散
+    duration: 6 + random() * 12,
+    delay: -random() * 18,
     peak,
-    floor: peak * (0.3 + random() * 0.2),
+    floor: peak * (0.32 + random() * 0.2),
     ease: Math.floor(random() * EASES.length),
+    ...createDrift(6),
   };
 });
 
-// 更细小的尘埃点：为空间增加层次，闪烁更慢更暗
-const DUST: Particle[] = Array.from({ length: 44 }, () => {
-  const peak = 0.22 + random() * 0.3;
+// 尘埃点：更小更暗，为空间增加层次；移动端不渲染
+const DUST: Particle[] = Array.from({ length: 38 }, () => {
+  const peak = 0.18 + random() * 0.24;
   return {
     x: random() * 100,
     y: random() * 100,
-    size: 1 + random() * 2.6,
-    duration: 9 + random() * 14,
-    delay: random() * 23,
+    size: 1.2 + random() * 2.4,
+    duration: 10 + random() * 14,
+    delay: -random() * 24,
     peak,
     floor: peak * (0.35 + random() * 0.25),
     ease: Math.floor(random() * EASES.length),
+    ...createDrift(4.5),
   };
 });
 
 const all = [...STARS, ...DUST];
+
+/** 流星：极低频的划过，负责"华丽"，两枚即可，避免抢戏 */
+const SHOOTING = [
+  { x: 8, y: 16, len: 16, angle: 24, shootX: 34, shootY: 15, duration: 19, delay: 3 },
+  { x: 62, y: 8, len: 12, angle: 28, shootX: 26, shootY: 14, duration: 27, delay: 13 },
+];
 ---
 
 <div class="starfield" aria-hidden="true">
   {all.map((p, i) => (
     <span
       class:list={['starfield__dot', i < STARS.length ? 'is-star' : 'is-dust']}
-      style={`--x:${p.x}%;--y:${p.y}%;--size:${p.size}px;--dur:${p.duration.toFixed(2)}s;--delay:${p.delay.toFixed(2)}s;--peak:${p.peak.toFixed(3)};--floor:${p.floor.toFixed(3)};--ease:${EASES[p.ease]}`}
+      style={`--x:${p.x}%;--y:${p.y}%;--size:${p.size.toFixed(2)}px;--dur:${p.duration.toFixed(2)}s;--delay:${p.delay.toFixed(2)}s;--peak:${p.peak.toFixed(3)};--floor:${p.floor.toFixed(3)};--ease:${EASES[p.ease]};--dx:${p.dx.toFixed(2)}vmin;--dy:${p.dy.toFixed(2)}vmin;--ddur:${p.driftDuration.toFixed(2)}s;--ddelay:${p.driftDelay.toFixed(2)}s`}
+    />
+  ))}
+
+  {SHOOTING.map((s) => (
+    <span
+      class="starfield__shooting"
+      style={`--x:${s.x}vw;--y:${s.y}vh;--len:${s.len}vw;--angle:${s.angle}deg;--shoot-x:${s.shootX}vw;--shoot-y:${s.shootY}vh;--shoot-dur:${s.duration}s;--shoot-delay:${s.delay}s`}
     />
   ))}
 </div>
@@ -114,17 +132,9 @@ const all = [...STARS, ...DUST];
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
-    /*
-      两层遮罩：
-      · 上下边缘轻微渐隐，让粒子层与页面边界自然衔接
-      · 中央横向区域进一步压暗，避免星点直接压在字标上抢注意力
-      两者相乘，因此中央的粒子只是变暗而非消失——星空依然连续。
-    */
-    mask-image:
-      linear-gradient(to bottom, transparent 0%, black 5%, black 92%, transparent 100%),
-      radial-gradient(ellipse 46% 30% at 50% 48%, transparent 0%, rgb(0 0 0 / 22%) 55%, black 100%);
-    mask-composite: intersect;
-    -webkit-mask-composite: source-in;
+    contain: layout style paint;
+    /* 边缘渐隐，与页面边界自然衔接；中央不再压暗——粒子已足够微弱 */
+    mask-image: linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
   }
 
   .starfield__dot {
@@ -133,21 +143,24 @@ const all = [...STARS, ...DUST];
     inset-block-start: var(--y);
     inline-size: var(--size);
     block-size: var(--size);
-    translate: -50% -50%;
+    margin-inline-start: calc(var(--size) / -2);
+    margin-block-start: calc(var(--size) / -2);
     border-radius: 50%;
     background-color: var(--ys-lavender-soft);
-    /* 动画启动前的初始态与关键帧的暗态一致，避免闪现 */
-    opacity: var(--floor, 0);
-    animation: ys-twinkle var(--dur) var(--ease, ease-in-out) var(--delay) infinite;
+    /* 动画启动前的初始态与关键帧暗态一致，避免闪现 */
+    opacity: calc(var(--floor) * var(--ys-star-attenuation));
+    animation:
+      ys-twinkle var(--dur) var(--ease) var(--delay) infinite,
+      ys-drift var(--ddur) ease-in-out var(--ddelay) infinite;
   }
 
   /*
     四芒星粒子：用 Logo 的真实星形作为遮罩。
-    mask 让元素变成星形轮廓而非实心圆点。
-    遮罩的 SVG 直接写在这里（不用 define:vars 注入，避免 data URI 被转义破坏）。
+    viewBox 必须以星心为原点跨 ±50（-50 -50 100 100），
+    用 0 0 100 100 只会框住右下四分之一。
+    遮罩的 SVG 直接写在这里，不用 define:vars 注入（会被 HTML 转义破坏）。
   */
   .starfield__dot.is-star {
-    background-color: var(--ys-lavender-soft);
     border-radius: 0;
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Cpath d='M0 -50C10.62 -28.24 28.24 -10.62 50 0C28.24 10.62 10.62 28.24 0 50C-10.62 28.24 -28.24 10.62 -50 0C-28.24 -10.62 -10.62 -28.24 0 -50' fill='%23fff'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-50 -50 100 100'%3E%3Cpath d='M0 -50C10.62 -28.24 28.24 -10.62 50 0C28.24 10.62 10.62 28.24 0 50C-10.62 28.24 -28.24 10.62 -50 0C-28.24 -10.62 -10.62 -28.24 0 -50' fill='%23fff'/%3E%3C/svg%3E");
@@ -157,46 +170,112 @@ const all = [...STARS, ...DUST];
     -webkit-mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     -webkit-mask-position: center;
-    /* 辉光让四芒星的尖角在深背景上更清晰 */
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--ys-lavender) 70%, transparent));
   }
 
+  /* 尘埃用径向渐变获得柔边，替代逐元素 blur —— 后者会为每颗粒子增加一次滤镜开销 */
   .starfield__dot.is-dust {
-    background-color: var(--ys-lavender);
-    filter: blur(0.4px);
+    background: radial-gradient(circle, var(--ys-lavender) 0%, transparent 70%);
   }
 
   /*
     闪烁：星星不会真正消失，只是在明暗之间变化。
-    因此最低亮度保留 --peak 的一个底数（--floor），
-    避免出现"整片天空同时熄灭"的瞬间——那不像星空，更像信号灯。
+    最低亮度保留 --peak 的一个底数（--floor），
+    避免出现"整片天空同时熄灭"的瞬间。
   */
   @keyframes ys-twinkle {
     0%,
     100% {
-      opacity: var(--floor);
+      opacity: calc(var(--floor) * var(--ys-star-attenuation));
       scale: 0.9;
     }
     38% {
-      opacity: var(--peak);
+      opacity: calc(var(--peak) * var(--ys-star-attenuation));
       scale: 1;
     }
     64% {
-      opacity: calc(var(--peak) * 0.55);
+      opacity: calc(var(--peak) * 0.55 * var(--ys-star-attenuation));
       scale: 0.95;
     }
     82% {
-      opacity: calc(var(--peak) * 0.8);
+      opacity: calc(var(--peak) * 0.8 * var(--ys-star-attenuation));
       scale: 0.98;
     }
   }
 
-  /* 减少动态效果：停止闪烁，保留静态低亮度 */
+  /* 漂移：闭合轨迹，首尾同为原点，循环时没有可察觉的跳变 */
+  @keyframes ys-drift {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    25% {
+      translate: calc(var(--dx) * 0.6) calc(var(--dy) * -0.4);
+    }
+    50% {
+      translate: var(--dx) var(--dy);
+    }
+    75% {
+      translate: calc(var(--dx) * -0.35) calc(var(--dy) * 0.75);
+    }
+  }
+
+  /* ---------- 流星 ---------- */
+
+  .starfield__shooting {
+    position: absolute;
+    inset-block-start: var(--y);
+    inset-inline-start: var(--x);
+    inline-size: var(--len);
+    block-size: 1px;
+    border-radius: var(--ys-radius-pill);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--ys-lavender) 45%, transparent) 62%,
+      var(--ys-lavender-soft) 100%
+    );
+    opacity: 0;
+    rotate: var(--angle);
+    animation: ys-shoot var(--shoot-dur) linear var(--shoot-delay) infinite;
+  }
+
+  @keyframes ys-shoot {
+    0%,
+    92% {
+      opacity: 0;
+      translate: 0 0;
+    }
+    93% {
+      opacity: 0.5;
+    }
+    96% {
+      opacity: 0.3;
+      translate: calc(var(--shoot-x) * 0.8) calc(var(--shoot-y) * 0.8);
+    }
+    100% {
+      opacity: 0;
+      translate: var(--shoot-x) var(--shoot-y);
+    }
+  }
+
+  /* 移动端：尘埃层不渲染，降低合成压力 */
+  @media (max-width: 767px) {
+    .starfield__dot.is-dust {
+      display: none;
+    }
+  }
+
+  /* 减少动态效果：停止漂移与闪烁，保留静态低亮度 */
   @media (prefers-reduced-motion: reduce) {
     .starfield__dot {
       animation: none;
-      opacity: var(--peak);
+      opacity: calc(var(--peak) * var(--ys-star-attenuation));
       scale: 1;
+      translate: 0 0;
+    }
+
+    .starfield__shooting {
+      display: none;
     }
   }
 </style>

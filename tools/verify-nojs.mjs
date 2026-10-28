@@ -170,8 +170,8 @@ for (const route of routes) {
     'Runtime.evaluate',
     {
       expression: `(() => {
-      // 首页有背景大 Logo，子页面只有导航小标 —— 两者都要检查
-      const heroMark = document.querySelector('.hero__mark img');
+      // 首页有固定背景大 Logo（HomeAmbience），子页面只有导航小标 —— 两者都要检查
+      const heroMark = document.querySelector('.home-ambience__mark img');
       const navMark = document.querySelector('.site-nav__mark');
       const markRect = heroMark ? heroMark.getBoundingClientRect() : null;
       const navRect = navMark ? navMark.getBoundingClientRect() : null;
