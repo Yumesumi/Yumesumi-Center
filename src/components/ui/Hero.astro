@@ -12,6 +12,7 @@
  */
 import { SITE } from '@/data/site';
 import BrandLogo from '@/components/ui/BrandLogo.astro';
+import StarField from '@/components/ui/StarField.astro';
 
 const base = import.meta.env.BASE_URL;
 const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
@@ -24,6 +25,7 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     屏幕阅读器不需要重复朗读。
   -->
   <div class="hero__backdrop" aria-hidden="true">
+    <StarField />
     <div class="hero__glow"></div>
     <div class="hero__mark">
       <BrandLogo size={520} maxSize="78vw" label="" opacity={0.16} />
@@ -116,6 +118,7 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     只剩中央四芒星，反而认不出是 Logo。
     位置同样经过调整：整体略微下移，让四芒星实心区避开文字带，
     否则「梦澄中心」会被压在四芒星上难以辨认。
+    保持正立不旋转——Logo 本身是轴对称的菱形，倾斜会破坏其几何秩序。
   */
   .hero__mark {
     position: absolute;
@@ -124,7 +127,6 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     display: grid;
     place-items: center;
     translate: -50% -50%;
-    rotate: -6deg;
   }
 
   /* ---------- 文字层 ---------- */

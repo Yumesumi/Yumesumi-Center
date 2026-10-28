@@ -43,3 +43,8 @@ pnpm-debug.log*
 tools/hero-tune.mjs
 tools/.hero-tune.png
 tools/.filter-test.png
+
+# 临时调参产物
+tools/.hero-tune.png
+tools/.particle-tune.png
+tools/.star-zoom.png
