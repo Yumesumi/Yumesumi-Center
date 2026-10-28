@@ -1,25 +1,37 @@
 ---
 /**
- * 3D 场景的 Astro 包装层。
+ * 3D 场景的宿主容器。
+ *
+ * 挂载方式：显式 import + createRoot，而非 Astro 的 client:* 指令。
+ * 原因见 src/components/3d/mountScene.tsx 的注释——
+ * Astro island 注水依赖的事件在解析早期同步派发，存在错过事件的竞态，
+ * 会导致 3D 场景静默消失且无任何报错。
  *
  * 职责边界：
- *   · 只在客户端注水（client:only），避免 SSR 阶段触碰 WebGL；
  *   · 场景加载失败时静默降级，CSS 占位几何体继续承担视觉；
- *   · 关键信息（字标、正文）始终由静态 HTML 提供，不依赖 Canvas。
+ *   · 关键信息（字标、正文）始终由静态 HTML 提供，不依赖 Canvas；
+ *   · 页面切换时精确卸载，释放 WebGL 上下文。
  */
-import LogoScene from './LogoScene';
-
-interface Props {
-  /** 低性能设备提示 */
-  lowPower?: boolean;
-}
-
-const { lowPower = false } = Astro.props;
 ---
 
-<div class="scene-root" data-scene-root>
-  <LogoScene client:only="react" lowPower={lowPower} />
-</div>
+<div class="scene-root" data-scene-root></div>
+
+<script>
+  import { mountScene, unmountScene } from '@/components/3d/mountScene';
+
+  const root = document.querySelector<HTMLElement>('[data-scene-root]');
+
+  if (root) {
+    mountScene(root).catch(() => {
+      // 挂载失败时保持 CSS 占位，不阻断页面其余部分
+      root.dataset.sceneFallback = 'true';
+    });
+  }
+
+  // 页面切换（或导航替换）前卸载，释放 GPU 资源
+  document.addEventListener('astro:before-swap', unmountScene);
+  window.addEventListener('pagehide', unmountScene);
+</script>
 
 <style>
   .scene-root {

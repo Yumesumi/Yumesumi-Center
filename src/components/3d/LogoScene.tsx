@@ -154,11 +154,6 @@ interface SubjectProps {
   reducedMotion: boolean;
 }
 
-interface LogoSceneProps {
-  /** 强制低画质模式（由调用方根据设备情况决定） */
-  lowPower?: boolean;
-}
-
 function PrismSubject({ lowPower, reducedMotion }: SubjectProps) {
   const group = useRef<THREE.Group>(null);
 
@@ -338,7 +333,7 @@ function CameraRig({ reducedMotion }: { reducedMotion: boolean }) {
  * 场景根组件
  * ------------------------------------------------------------------ */
 
-export default function LogoScene({ lowPower: forcedLowPower = false }: LogoSceneProps) {
+export default function LogoScene() {
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -354,7 +349,7 @@ export default function LogoScene({ lowPower: forcedLowPower = false }: LogoScen
   // WebGL 不可用时完全不渲染，静态内容由 CSS 承担
   if (!capabilities?.webgl || !ready) return null;
 
-  const lowPower = forcedLowPower || capabilities.lowPower;
+  const lowPower = capabilities.lowPower;
   const dpr: [number, number] = lowPower ? [1, 1.25] : [1, 1.75];
 
   return (
