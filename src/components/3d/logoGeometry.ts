@@ -157,7 +157,13 @@ export function buildPrismGeometry(): THREE.BufferGeometry {
     curveSegments: 32,
   });
 
-  geometry.center();
+  /*
+   * 不要调用 geometry.center()。
+   * 挤出体沿 z 轴居中即可（depth 的中心），但 x/y 必须保留 Logo 的原始位置——
+   * 否则棱镜、四芒星、叶形三者之间的相对关系会丢失，
+   * 拼不出 Logo 的原始构型。
+   */
+  geometry.translate(0, 0, -0.08);
   geometry.computeVertexNormals();
   return geometry;
 }
@@ -204,7 +210,8 @@ export function buildStarGeometries(): {
     bevelSegments: 3,
     curveSegments: 48,
   });
-  halo.center();
+  // 只在 z 轴居中，保留 x/y 的 Logo 原始位置
+  halo.translate(0, 0, -0.025);
   halo.computeVertexNormals();
 
   const core = new THREE.ExtrudeGeometry(new THREE.Shape(innerPoints), {
@@ -215,7 +222,7 @@ export function buildStarGeometries(): {
     bevelSegments: 3,
     curveSegments: 48,
   });
-  core.center();
+  core.translate(0, 0, -0.06);
   core.computeVertexNormals();
 
   return { halo, core };
@@ -251,7 +258,13 @@ export function buildOrbitGeometries(): THREE.BufferGeometry[] {
       }
     }
 
+    // 跳过退化弧线（Logo 中用于控制填充规则的零长度路径）
     if (points.length < 2) continue;
+    const span = points.reduce(
+      (max, p) => Math.max(max, Math.abs(p.x - points[0]!.x) + Math.abs(p.y - points[0]!.y)),
+      0,
+    );
+    if (span < 0.02) continue;
 
     // 用 CatmullRom 让曲线穿过控制点，得到平滑轨道
     const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal', 0.5);
@@ -282,7 +295,8 @@ export function buildPedestalGeometries(): THREE.BufferGeometry[] {
       bevelSegments: 3,
       curveSegments: 32,
     });
-    geometry.center();
+    // 只在 z 轴居中，保留 x/y 的 Logo 原始位置
+    geometry.translate(0, 0, -0.04);
     geometry.computeVertexNormals();
     geometries.push(geometry);
   }

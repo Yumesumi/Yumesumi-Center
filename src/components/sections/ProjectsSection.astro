@@ -9,6 +9,7 @@
  * 差异只体现在比例、留白与色彩重心上。
  */
 import { SORTED_PROJECTS } from '@/data/projects';
+import BrandLogo from '@/components/ui/BrandLogo.astro';
 
 const base = import.meta.env.BASE_URL;
 const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
@@ -29,8 +30,15 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
             href={withBase(project.href)}
             style={`--project-accent: var(${project.accentVar})`}
           >
-            <div class="project__media" aria-hidden="true">
-              <span class="project__media-shape" />
+            <div class="project__media">
+              {/*
+                使用真实的品牌标记，而不是另画一个几何占位——
+                后者丢失了四芒星与装饰弧线，观感上只是空心菱形，
+                无法传达品牌识别。
+              */}
+              <span class="project__media-mark">
+                <BrandLogo size={132} label="" opacity={0.5} />
+              </span>
               <span class="project__index">{String(index + 1).padStart(2, '0')}</span>
             </div>
 
@@ -165,25 +173,18 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     border-color: color-mix(in srgb, var(--project-accent) 34%, transparent);
   }
 
-  .project__media-shape {
+  .project__media-mark {
+    display: grid;
+    place-items: center;
     inline-size: 34%;
-    aspect-ratio: 1;
-    rotate: 45deg;
-    border: 1px solid color-mix(in srgb, var(--project-accent) 40%, transparent);
-    border-radius: 18%;
-    background: linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--project-accent) 12%, transparent) 0%,
-      transparent 70%
-    );
     transition:
-      rotate var(--ys-dur-cinematic) var(--ys-ease-emphasized),
-      scale var(--ys-dur-cinematic) var(--ys-ease-emphasized);
+      opacity var(--ys-dur-cinematic) var(--ys-ease-emphasized),
+      transform var(--ys-dur-cinematic) var(--ys-ease-emphasized);
   }
 
-  .project__link:hover .project__media-shape {
-    rotate: 135deg;
-    scale: 1.06;
+  .project__link:hover .project__media-mark {
+    opacity: 0.78;
+    transform: scale(1.06) rotate(6deg);
   }
 
   .project__index {

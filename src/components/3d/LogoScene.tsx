@@ -191,12 +191,16 @@ function PrismSubject({ lowPower, reducedMotion }: SubjectProps) {
     // 相机运动：随滚动推进并轻微上抬，配合主体旋转
     group.current.rotation.y = pointer.value.x * 0.16 + p * 0.42;
     group.current.rotation.x = -pointer.value.y * 0.1 + p * 0.14;
-    group.current.position.y = p * 0.34;
-    group.current.position.z = p * 0.28;
 
-    // 整体后移并缩小：主体是背景层，不能与前景字标争夺视觉重心
-    group.current.scale.setScalar(0.78);
-    group.current.position.z -= 0.6;
+    /*
+     * 构图：主体上移，让它完整落在字标上方——
+     * 字标是前景焦点，3D 主体是背景层，两者不应在同一位置互相遮挡。
+     */
+    group.current.position.y = 1.28 + p * 0.34;
+    group.current.position.z = -0.1 + p * 0.28;
+
+    // 略微缩小，保持"背景层"的体量感
+    group.current.scale.setScalar(0.56);
 
     // 核心晶体的呼吸：幅度极小，是"材质在动"而非"物体在转"
     if (!reducedMotion) {
@@ -242,32 +246,39 @@ function PrismSubject({ lowPower, reducedMotion }: SubjectProps) {
       </mesh>
 
       {/*
-        装饰弧线 → 环绕轨道。
-        Logo 里的三条弧线本是同一套「流动」语言的一部分，
-        在三维中让它们保持共同的旋转轴与统一的倾斜角，
-        形成一组同心的轨道，而不是三道互相穿插的乱线。
+        装饰弧线 → 品牌标记的一部分。
+        Logo 里这三条弧线与菱形框、四芒星构成同一个完整图形，
+        因此在三维中必须保持共面、贴合框架，而不是拆散成独立轨道——
+        拆开后会变成穿插的乱线，既不像 Logo 也不像有意设计的轨道。
+        做法：与框架共面（z 偏移极小），按原 Logo 位置摆放。
       */}
       {orbits.map((geometry, index) => (
-        <mesh
-          key={index}
-          geometry={geometry}
-          rotation={[0.58, index * 0.34, 0]}
-          position={[0, -0.06, -0.28 - index * 0.22]}
-          scale={1.02 + index * 0.09}
-        >
-          <meshBasicMaterial color="#9d84e8" transparent opacity={0.16} />
+        <mesh key={index} geometry={geometry} position={[0, 0, 0.02 + index * 0.012]} scale={0.99}>
+          <meshBasicMaterial
+            color="#b9a8f0"
+            transparent
+            opacity={0.4}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
         </mesh>
       ))}
 
-      {/* 底部叶形 → 基座 */}
+      {/*
+        底部叶形 → Logo 的两片叶形。
+        几何体已包含正确的世界坐标（由 canvas 坐标直接换算而来），
+        因此不能再做额外位移，否则会与 Logo 的原始构型脱节。
+      */}
       {pedestals.map((geometry, index) => (
-        <mesh key={index} geometry={geometry} position={[index === 0 ? -0.32 : 0.32, -1.02, 0]}>
+        <mesh key={index} geometry={geometry} position={[0, 0, 0.015 + index * 0.01]}>
           <meshStandardMaterial
-            color="#6d4fc4"
+            color="#8f76d4"
             transparent
-            opacity={0.3}
-            roughness={0.42}
-            metalness={0.2}
+            opacity={0.42}
+            roughness={0.36}
+            metalness={0.18}
+            side={THREE.DoubleSide}
+            depthWrite={false}
           />
         </mesh>
       ))}

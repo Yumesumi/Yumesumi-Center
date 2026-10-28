@@ -8,6 +8,7 @@
 import { FOOTER_NAV } from '@/data/navigation';
 import { SITE } from '@/data/site';
 import { SORTED_PROJECTS } from '@/data/projects';
+import BrandLogo from '@/components/ui/BrandLogo.astro';
 
 /**
  * 站内链接需带 base 前缀（子路径部署），public/ 资源同样需要手动拼接。
@@ -22,13 +23,7 @@ const year = new Date().getFullYear();
   <div class="ys-container ys-container--wide">
     <div class="site-footer__top">
       <div class="site-footer__brand">
-        <img
-          class="site-footer__mark"
-          src={`${base}brand/logo.svg`}
-          alt=""
-          width="40"
-          height="40"
-        />
+        <BrandLogo size={44} label="" class="site-footer__mark" />
         <div>
           <p class="site-footer__name">{SITE.name}</p>
           <p class="site-footer__zh">{SITE.nameZh}</p>

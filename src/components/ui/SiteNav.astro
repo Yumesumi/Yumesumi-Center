@@ -11,6 +11,7 @@
  */
 import { PRIMARY_NAV } from '@/data/navigation';
 import { SITE } from '@/data/site';
+import BrandLogo from '@/components/ui/BrandLogo.astro';
 
 /**
  * 站点部署在子路径（GitHub Pages 项目仓库）时，
@@ -31,7 +32,7 @@ const isActive = (href: string, key: string) => {
 <header class="site-nav" data-site-nav>
   <div class="site-nav__inner ys-container ys-container--wide">
     <a class="site-nav__brand" href={withBase('/')} aria-label={`${SITE.name} 首页`}>
-      <img class="site-nav__mark" src={`${base}brand/logo.svg`} alt="" width="28" height="28" />
+      <BrandLogo size={30} label="" class="site-nav__mark" />
       <span class="site-nav__wordmark">{SITE.wordmark}</span>
     </a>
 
@@ -137,9 +138,8 @@ const isActive = (href: string, key: string) => {
   }
 
   .site-nav__mark {
-    inline-size: 26px;
-    block-size: 26px;
-    opacity: 0.92;
+    /* Logo 线条细，导航尺寸下需要略微提亮才能保持清晰 */
+    opacity: 0.88;
     transition: opacity var(--ys-dur-fast) var(--ys-ease-out);
   }
 

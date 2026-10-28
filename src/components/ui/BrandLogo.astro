@@ -1,0 +1,49 @@
+---
+/**
+ * 品牌 Logo 组件。
+ *
+ * 统一全站的品牌标记呈现方式，避免各处自行拼凑几何图形——
+ * 那些「自造的菱形」看似呼应品牌，实则缺少四芒星与装饰弧线，
+ * 观感上只是空心几何体，失去了品牌辨识度。
+ *
+ * 设计要点：
+ *   · 使用从 logo矢量图.ai 精确提取的真实路径（public/brand/logo.svg）
+ *   · 通过 CSS 变量控制尺寸与不透明度，适配不同场景
+ *   · 提供 aria-label，图形本身对屏幕阅读器隐藏（装饰性时传空字符串）
+ */
+interface Props {
+  /** 尺寸（px） */
+  size?: number;
+  /** 无障碍标签；纯装饰时传空字符串 */
+  label?: string;
+  /** 额外 class */
+  class?: string;
+  /** 不透明度 */
+  opacity?: number;
+}
+
+const { size = 32, label = 'Yumesumi Center', class: className = '', opacity = 1 } = Astro.props;
+
+const base = import.meta.env.BASE_URL;
+---
+
+<img
+  class:list={['ys-logo', className]}
+  src={`${base}brand/logo.svg`}
+  alt={label}
+  width={size}
+  height={size}
+  style={`inline-size:${size}px;block-size:${size}px;opacity:${opacity}`}
+/>
+
+<style>
+  .ys-logo {
+    display: block;
+    flex-shrink: 0;
+    /* Logo 是纯白线条图形，继承当前文字颜色才能在不同背景下保持可见 */
+    filter: brightness(0) invert(1);
+    transition:
+      opacity var(--ys-dur-base) var(--ys-ease-out),
+      transform var(--ys-dur-base) var(--ys-ease-out);
+  }
+</style>

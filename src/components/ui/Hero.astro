@@ -13,27 +13,34 @@
  */
 import { SITE } from '@/data/site';
 import LogoSceneIsland from '@/components/3d/LogoSceneIsland.astro';
+import BrandLogo from '@/components/ui/BrandLogo.astro';
 
 const base = import.meta.env.BASE_URL;
 const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
 ---
 
 <section class="hero" data-hero>
-  <!-- 场景层：实时 3D（WebGL 不可用时自动降级为下方 CSS 占位） -->
+  <!--
+    场景层：实时 3D（WebGL 不可用时自动降级为下方静态品牌标记）
+    aria-hidden：这是装饰性图层，页面标题已完整表达站点身份，
+    屏幕阅读器不需要重复朗读 Logo。
+  -->
   <div class="hero__scene" data-hero-scene aria-hidden="true">
     <div class="hero__glow"></div>
-    <div class="hero__geometry"></div>
+    <div class="hero__geometry">
+      <BrandLogo size={520} label="" opacity={0.16} />
+    </div>
     <LogoSceneIsland />
   </div>
 
   <!-- 文字层 -->
   <div class="hero__content ys-container ys-container--wide">
-    <p class="hero__eyebrow">{SITE.nameZh}</p>
-
     <h1 class="hero__wordmark">
       <span class="hero__wordmark-line">YUMESUMI</span>
       <span class="hero__wordmark-line">CENTER</span>
     </h1>
+
+    <p class="hero__eyebrow">{SITE.nameZh}</p>
 
     <p class="hero__lede">{SITE.tagline}</p>
 
@@ -66,7 +73,8 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     display: grid;
     align-content: center;
     min-block-size: 100svh;
-    padding-block: calc(var(--ys-nav-height) + var(--ys-space-xl)) var(--ys-space-2xl);
+    /* 顶部留出空间给 3D 主体，避免与字标重叠 */
+    padding-block: calc(var(--ys-nav-height) + var(--ys-space-3xl)) var(--ys-space-2xl);
     overflow: clip;
     background: radial-gradient(
       120% 80% at 50% 8%,
@@ -108,23 +116,13 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     position: absolute;
     inset-block-start: 50%;
     inset-inline-start: 50%;
-    inline-size: min(52vw, 26rem);
+    display: grid;
+    place-items: center;
+    inline-size: min(56vw, 32rem);
     aspect-ratio: 1;
     /* 后移并压暗，避免与前景字标争夺视觉重心 */
     translate: -50% -50%;
-    scale: 1.16;
-    rotate: 45deg;
-    border: 1px solid rgb(157 132 232 / 16%);
-    border-radius: 22%;
-    background: linear-gradient(
-      145deg,
-      rgb(185 168 240 / 5%) 0%,
-      rgb(109 79 196 / 2%) 46%,
-      transparent 72%
-    );
-    box-shadow:
-      0 0 120px -40px var(--ys-accent-glow),
-      inset 0 0 80px -30px rgb(157 132 232 / 10%);
+    scale: 1.04;
     transition: opacity var(--ys-dur-cinematic) var(--ys-ease-out);
   }
 
@@ -143,7 +141,7 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
   }
 
   .hero__eyebrow {
-    margin-block-end: var(--ys-space-md);
+    margin-block: var(--ys-space-sm) var(--ys-space-md);
     font-size: var(--ys-fs-2xs);
     font-weight: var(--ys-weight-medium);
     letter-spacing: var(--ys-ls-widest);
