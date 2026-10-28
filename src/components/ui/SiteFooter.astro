@@ -9,6 +9,12 @@ import { FOOTER_NAV } from '@/data/navigation';
 import { SITE } from '@/data/site';
 import { SORTED_PROJECTS } from '@/data/projects';
 
+/**
+ * 站内链接需带 base 前缀（子路径部署），public/ 资源同样需要手动拼接。
+ */
+const base = import.meta.env.BASE_URL;
+const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
+
 const year = new Date().getFullYear();
 ---
 
@@ -16,7 +22,13 @@ const year = new Date().getFullYear();
   <div class="ys-container ys-container--wide">
     <div class="site-footer__top">
       <div class="site-footer__brand">
-        <img class="site-footer__mark" src="/brand/logo.svg" alt="" width="40" height="40" />
+        <img
+          class="site-footer__mark"
+          src={`${base}brand/logo.svg`}
+          alt=""
+          width="40"
+          height="40"
+        />
         <div>
           <p class="site-footer__name">{SITE.name}</p>
           <p class="site-footer__zh">{SITE.nameZh}</p>
@@ -32,7 +44,7 @@ const year = new Date().getFullYear();
         <ul>
           {FOOTER_NAV.map((item) => (
             <li>
-              <a href={item.href}>{item.label}</a>
+              <a href={withBase(item.href)}>{item.label}</a>
             </li>
           ))}
         </ul>
@@ -43,7 +55,7 @@ const year = new Date().getFullYear();
         <ul>
           {SORTED_PROJECTS.map((project) => (
             <li>
-              <a href={project.href}>{project.nameZh}</a>
+              <a href={withBase(project.href)}>{project.nameZh}</a>
             </li>
           ))}
         </ul>
@@ -56,7 +68,11 @@ const year = new Date().getFullYear();
             <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
           </li>
           <li>
-            <a href="https://github.com/" rel="noopener noreferrer" target="_blank">
+            <a
+              href="https://github.com/Yumesumi/Yumesumi-Center"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
               GitHub
             </a>
           </li>

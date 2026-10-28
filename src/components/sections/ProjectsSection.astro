@@ -9,6 +9,9 @@
  * 差异只体现在比例、留白与色彩重心上。
  */
 import { SORTED_PROJECTS } from '@/data/projects';
+
+const base = import.meta.env.BASE_URL;
+const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
 ---
 
 <section class="projects" id="projects">
@@ -23,7 +26,7 @@ import { SORTED_PROJECTS } from '@/data/projects';
         <li class:list={['project', `project--${project.layout}`]}>
           <a
             class="project__link"
-            href={project.href}
+            href={withBase(project.href)}
             style={`--project-accent: var(${project.accentVar})`}
           >
             <div class="project__media" aria-hidden="true">

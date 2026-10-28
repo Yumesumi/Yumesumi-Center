@@ -9,13 +9,17 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname, extname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = resolve(ROOT, 'dist');
 const OUT = resolve(ROOT, process.argv[2] ?? '.shots');
 const PORT = 4322;
-const BASE = `http://127.0.0.1:${PORT}`;
+
+/** 从 astro.config 读取 base，模拟真实的子路径部署环境 */
+const astroConfig = await import(pathToFileURL(resolve(ROOT, 'astro.config.mjs')).href);
+const BASE_PATH = astroConfig.default.base ?? '/';
+const ORIGIN = `http://127.0.0.1:${PORT}`;
 
 const CHROME_CANDIDATES = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -39,13 +43,19 @@ const MIME = {
 
 const server = createServer(async (req, res) => {
   try {
-    const path = decodeURIComponent(new URL(req.url, BASE).pathname);
-    let filePath = join(DIST, path);
+    const path = decodeURIComponent(new URL(req.url, ORIGIN).pathname);
+    if (!path.startsWith(BASE_PATH)) {
+      res.writeHead(404);
+      res.end('404 (outside base)');
+      return;
+    }
+    const rel = path.slice(BASE_PATH.length) || '/';
+    let filePath = join(DIST, rel);
     try {
       const s = await stat(filePath);
       if (s.isDirectory()) filePath = join(filePath, 'index.html');
     } catch {
-      filePath = join(DIST, path.replace(/\/$/, ''), 'index.html');
+      filePath = join(DIST, rel.replace(/\/$/, ''), 'index.html');
     }
     const body = await readFile(filePath);
     res.writeHead(200, { 'Content-Type': MIME[extname(filePath)] ?? 'application/octet-stream' });
@@ -62,7 +72,11 @@ const child = spawn(
   chrome,
   [
     '--headless=new',
-    '--disable-gpu',
+    // headless 下用 SwiftShader 软件渲染 WebGL，
+    // 否则 --disable-gpu 会让 3D 场景完全无法截图验证。
+    '--enable-unsafe-swiftshader',
+    '--use-gl=angle',
+    '--use-angle=swiftshader',
     '--hide-scrollbars',
     '--no-first-run',
     '--remote-debugging-port=9223',
@@ -136,7 +150,11 @@ for (const shot of SHOTS) {
     sessionId,
   );
 
-  await send('Page.navigate', { url: `${BASE}${shot.route}` }, sessionId);
+  await send(
+    'Page.navigate',
+    { url: `${ORIGIN}${BASE_PATH.replace(/\/$/, '')}${shot.route}` },
+    sessionId,
+  );
   await new Promise((r) => setTimeout(r, 1200));
   await send(
     'Runtime.evaluate',

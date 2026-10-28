@@ -18,6 +18,13 @@ interface Props {
 }
 
 const { title, titleZh, description, anchor = '/', upcoming = [] } = Astro.props;
+
+/**
+ * anchor 可能形如 '/#about'——跨页锚点同样需要带上 base 前缀，
+ * 否则会跳到域名根目录去。
+ */
+const base = import.meta.env.BASE_URL;
+const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
 ---
 
 <section class="placeholder">
@@ -44,7 +51,7 @@ const { title, titleZh, description, anchor = '/', upcoming = [] } = Astro.props
       </div>
     )}
 
-    <a class="placeholder__back" href={anchor}>
+    <a class="placeholder__back" href={withBase(anchor)}>
       ← 返回首页
     </a>
   </div>

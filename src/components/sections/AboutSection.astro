@@ -5,6 +5,8 @@
  * 个人简介、创作理念与项目时间线。
  * 时间线只记录真实存在的项目，不编造年份与里程碑。
  */
+const base = import.meta.env.BASE_URL;
+const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
 ---
 
 <section class="about" id="about">
@@ -20,7 +22,7 @@
         <p class="about__text">
           梦澄中心是这些过程的公开档案——一个把技术项目、数字世界与个人创作收拢到同一套语言里的地方。
         </p>
-        <a class="about__link" href="/about/">
+        <a class="about__link" href={withBase('/about/')}>
           了解更多 →
         </a>
       </div>

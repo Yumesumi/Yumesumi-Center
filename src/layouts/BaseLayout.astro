@@ -32,6 +32,14 @@ const {
   accent = 'var(--ys-lavender)',
 } = Astro.props;
 
+/**
+ * 静态资源基址。
+ *
+ * public/ 下的文件不会被 Astro 自动加上 base 前缀，
+ * 在子路径部署（/Yumesumi-Center/）时必须手动拼接，否则会 404。
+ */
+const base = import.meta.env.BASE_URL;
+
 const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.nameZh}`;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url);
 const ogImageUrl = new URL(ogImage, Astro.site ?? SITE.url);
@@ -62,8 +70,8 @@ const ogImageUrl = new URL(ogImage, Astro.site ?? SITE.url);
     <meta name="color-scheme" content="dark" />
 
     <!-- 品牌图标 -->
-    <link rel="icon" href="/brand/logo.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/brand/logo.svg" />
+    <link rel="icon" href={`${base}brand/logo.svg`} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={`${base}brand/logo.svg`} />
 
     <!--
       预加载拉丁字体分片：首屏字标 YUMESUMI CENTER 属于拉丁字符集，
@@ -71,13 +79,13 @@ const ogImageUrl = new URL(ogImage, Astro.site ?? SITE.url);
     -->
     <link
       rel="preload"
-      href="/fonts/misans-latin.woff2"
+      href={`${base}fonts/misans-latin.woff2`}
       as="font"
       type="font/woff2"
       crossorigin="anonymous"
     />
 
-    <link rel="stylesheet" href="/fonts/fonts.css" />
+    <link rel="stylesheet" href={`${base}fonts/fonts.css`} />
 
     <style define:vars={{ accent }}>
       :root {

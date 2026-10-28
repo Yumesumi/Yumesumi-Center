@@ -3,7 +3,7 @@
 MiSans 字体子集化脚本。
 
 背景：
-    项目自带的 MiSans 原始素材总量约 259MB（10 个字重，每个 woff2 约 5MB），
+    项目自带的 MiSans 原始文件总量约 259MB（10 个字重，每个 woff2 约 5MB），
     直接放进 public/ 会让首屏加载无法接受。
 
 策略：
@@ -11,16 +11,20 @@ MiSans 字体子集化脚本。
        一个文件即可覆盖所有字重，无需为每个字重单独产出文件。
     2. 按字符集分片，配合 CSS unicode-range 按需加载：
          - misans-latin.woff2   拉丁 + 数字 + 符号（约 130KB）
-                                  首屏字标 YUMESUMI CENTER 属于此类，优先命中。
+                                首屏字标 YUMESUMI CENTER 属于此类，优先命中。
          - misans-sc-1..4.woff2 GB2312 一级汉字（按拼音序分 4 片，共 3755 字）
-         - misans-sc-rare.woff2 GB2312 二级汉字（3008 生僻字，页面极少命中）
        浏览器只会下载实际用到的分片，中文正文通常只命中 1-2 片。
-    3. 自动生成 public/fonts/fonts.css，unicode-range 与分片内容始终保持同步，
+    3. 生僻字分片（GB2312 二级汉字，1.8MB）不随仓库分发：
+       GitHub 单文件 1MB 限制会让它无法直接入库，而它承载的是极低频字符。
+       该分片输出到仓库外的目录，需要时可本地部署或放到自建 CDN；
+       未部署时这些生僻字自动回落到系统中文字体，不影响正文阅读。
+    4. 自动生成 public/fonts/fonts.css，unicode-range 与分片内容始终保持同步，
        不需要手工维护，也就不会出现"字形缺失"。
 
 依赖： fonttools + brotli
 用法： python scripts/subset_fonts.py
 """
+
 from __future__ import annotations
 
 import sys
@@ -35,6 +39,8 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "MiSans" / "可变字体" / "MiSansVF.ttf"
 OUT_DIR = ROOT / "public" / "fonts"
+# 生僻字分片输出到仓库外（项目父目录），避免单个 1.8MB 文件超 GitHub 限制
+OUT_SIDE = ROOT.parent / "yumesumi-fonts-outside"
 
 # 拉丁分片：ASCII 可见字符 + 常用符号
 LATIN_CHARS = set(chr(c) for c in range(0x20, 0x7F))
@@ -45,7 +51,7 @@ LATIN_CHARS |= set("αβγδεζηθικλμνξοπρστυφχψω")
 LATIN_CHARS |= set("ΓΔΘΛΞΠΣΦΨΩ")
 LATIN_CHARS |= set("ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ")
 
-# 常用中文标点与符号（两个分片共用）
+# 常用中文标点与符号（各分片共用）
 SC_EXTRA = set(
     "。，、；：？！“”‘’（）《》【】〔〕—…·～￥"
     "％＃＠＆＊－＋＝｜＼＜＞／"
@@ -95,7 +101,7 @@ def ranges_of(chars: set[str]) -> list[str]:
     codes = sorted(ord(c) for c in chars)
     if not codes:
         return []
-    out: list[str] = []
+    out: list[tuple[int, int]] = []
     start = prev = codes[0]
     for code in codes[1:]:
         if code == prev + 1:
@@ -112,10 +118,10 @@ def font_face(family: str, file: str, unicode_range: list[str], weight: str = "1
     return (
         "@font-face {\n"
         f'  font-family: "{family}";\n'
-        f'  src: url("/fonts/{file}") format("woff2");\n'
+        f'  src: url("./{file}") format("woff2");\n'
         f"  font-weight: {weight};\n"
         "  font-style: normal;\n"
-        f"  font-display: swap;\n"
+        "  font-display: swap;\n"
         f"  unicode-range: {ur};\n"
         "}\n"
     )
@@ -126,6 +132,7 @@ def main() -> None:
         sys.exit(f"找不到可变字体源文件: {SOURCE}")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    OUT_SIDE.mkdir(parents=True, exist_ok=True)
 
     level1, level2 = gb2312_by_level()
     shard_count = 4
@@ -156,23 +163,29 @@ def main() -> None:
         written.append((name, len(chars), size))
         blocks.append(font_face("MiSans", name, ranges_of(chars)))
 
-    # --- 生僻字分片 ---
-    rare = set(level2) | SC_EXTRA
-    size = build(rare, OUT_DIR / "misans-sc-rare.woff2")
-    total += size
-    written.append(("misans-sc-rare.woff2", len(rare), size))
-    blocks.append(font_face("MiSans", "misans-sc-rare.woff2", ranges_of(rare)))
-
     css = (
         "/* 自动生成，请勿手工修改。运行 `npm run assets:fonts` 重新生成。 */\n"
-        "/* 源: MiSans/可变字体/MiSansVF.ttf  —— 保留 wght 150-700 字重轴 */\n\n"
+        "/* 源: MiSans/可变字体/MiSansVF.ttf  —— 保留 wght 150-700 字重轴 */\n"
+        "/* 使用相对路径，兼容子路径部署 (base) */\n\n"
         + "\n".join(blocks)
     )
     (OUT_DIR / "fonts.css").write_text(css, encoding="utf-8")
 
+    # --- 生僻字分片：输出到仓库外，不随仓库分发 ---
+    rare = set(level2) | SC_EXTRA
+    rare_path = OUT_SIDE / "misans-sc-rare.woff2"
+    rare_size = build(rare, rare_path)
+    rare_css = font_face("MiSans", "misans-sc-rare.woff2", ranges_of(rare))
+    (OUT_SIDE / "fonts-rare.css").write_text(
+        "/* 生僻字分片（GB2312 二级汉字）。未部署时这些字符回落到系统中文字体。 */\n\n"
+        + rare_css,
+        encoding="utf-8",
+    )
+
     for name, count, size in written:
         print(f"[fonts] {name:<24} {count:>5} 字符  {size / 1024:>8.1f} KB")
-    print(f"[fonts] 合计 {total / 1024 / 1024:.2f} MB（原素材 259 MB，缩减 98.4%）")
+    print(f"[fonts] 仓库内合计 {total / 1024 / 1024:.2f} MB（原素材 259 MB，缩减 98.4%）")
+    print(f"[fonts] 生僻字分片 {rare_size / 1024 / 1024:.2f} MB → {rare_path}（仓库外，不分发）")
     print(f"[fonts] CSS: public/fonts/fonts.css")
 
 

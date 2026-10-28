@@ -12,13 +12,18 @@
  * Phase 2 只需替换 <div class="hero__scene"> 的内容，不必重排结构。
  */
 import { SITE } from '@/data/site';
+import LogoSceneIsland from '@/components/3d/LogoSceneIsland.astro';
+
+const base = import.meta.env.BASE_URL;
+const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
 ---
 
 <section class="hero" data-hero>
-  <!-- 场景层：Phase 2 替换为 WebGL 画布 -->
+  <!-- 场景层：实时 3D（WebGL 不可用时自动降级为下方 CSS 占位） -->
   <div class="hero__scene" data-hero-scene aria-hidden="true">
     <div class="hero__glow"></div>
     <div class="hero__geometry"></div>
+    <LogoSceneIsland />
   </div>
 
   <!-- 文字层 -->
@@ -33,7 +38,7 @@ import { SITE } from '@/data/site';
     <p class="hero__lede">{SITE.tagline}</p>
 
     <div class="hero__actions">
-      <a class="hero__cta" href="/projects/">
+      <a class="hero__cta" href={withBase('/projects/')}>
         <span>进入项目</span>
         <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
           <path
@@ -95,6 +100,8 @@ import { SITE } from '@/data/site';
       transparent 68%
     );
     filter: blur(28px);
+    /* 3D 场景就绪后让位，避免两层几何重叠 */
+    transition: opacity var(--ys-dur-cinematic) var(--ys-ease-out);
   }
 
   .hero__geometry {
@@ -118,6 +125,13 @@ import { SITE } from '@/data/site';
     box-shadow:
       0 0 120px -40px var(--ys-accent-glow),
       inset 0 0 80px -30px rgb(157 132 232 / 10%);
+    transition: opacity var(--ys-dur-cinematic) var(--ys-ease-out);
+  }
+
+  /* 场景已挂载时，CSS 占位退场 */
+  .hero__scene:has(.scene-root canvas) .hero__glow,
+  .hero__scene:has(.scene-root canvas) .hero__geometry {
+    opacity: 0;
   }
 
   /* ---------- 文字层 ---------- */

@@ -10,11 +10,16 @@ dist/
 .env.production
 .env.local
 
-# 工具缓存与临时产物
-tools/.logo-diff.png
-
 # 原始字体素材（259MB，已通过 scripts/subset_fonts.py 生成 public/fonts 子集）
 MiSans/
+
+# 生僻字字体分片（1.8MB，超出 GitHub 单文件 1MB 限制，输出到仓库外）
+yumesumi-fonts-outside/
+
+# 工具产物
+.shots/
+tools/.logo-diff.png
+tools/.logo-visual.png
 
 # 编辑器与系统
 .vscode/*
@@ -27,3 +32,6 @@ Thumbs.db
 npm-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Agent 工作记忆（本地，不入库）
+.workbuddy/

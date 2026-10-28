@@ -4,18 +4,26 @@
  * 用 Chrome DevTools Protocol 直连 headless Chrome，
  * 不引入 Playwright/Puppeteer 等额外依赖（避免为一次校验增加体积）。
  *
- * 用法: node tools/smoke.mjs [baseUrl]
+ * 关键点：服务器会把 dist 挂载到 astro.config 的 base 路径下，
+ * 精确模拟 GitHub Pages 的子路径部署环境。
+ * 若页面里残留任何未加前缀的绝对路径，会立刻 404 并被抓出来。
+ *
+ * 用法: node tools/smoke.mjs
  */
 import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve, dirname, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = resolve(ROOT, 'dist');
 const PORT = 4321;
-const BASE = process.argv[2] ?? `http://127.0.0.1:${PORT}`;
+
+/** 从 astro.config.mjs 读取 base，避免测试环境与实际部署不一致 */
+const astroConfig = await import(pathToFileURL(resolve(ROOT, 'astro.config.mjs')).href);
+const BASE_PATH = astroConfig.default.base ?? '/';
+const ORIGIN = `http://127.0.0.1:${PORT}`;
 
 const CHROME_CANDIDATES = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -53,8 +61,18 @@ const MIME = {
 
 const server = createServer(async (req, res) => {
   try {
-    const url = new URL(req.url ?? '/', BASE);
+    const url = new URL(req.url ?? '/', ORIGIN);
     let path = decodeURIComponent(url.pathname);
+
+    // 模拟 GitHub Pages：站点挂载在 base 子路径下。
+    // 请求未落在 base 前缀内的，一律 404 —— 这正是我们要验证的。
+    if (!path.startsWith(BASE_PATH)) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('404 (outside base)');
+      return;
+    }
+    path = path.slice(BASE_PATH.length) || '/';
+
     let filePath = joinPath(DIST, path);
     try {
       const s = await stat(filePath);
@@ -161,7 +179,14 @@ function collectRoutes(dir = DIST, base = '') {
   return routes;
 }
 
+/** 路由路径 + base 前缀，用于实际访问 */
+const withBase = (route) => {
+  const joined = `${BASE_PATH.replace(/\/$/, '')}${route}`.replace(/\/{2,}/g, '/');
+  return joined === '' ? '/' : joined;
+};
+
 const routes = collectRoutes().sort();
+console.log(`[smoke] 部署基路径: ${BASE_PATH}`);
 console.log(`[smoke] 发现 ${routes.length} 条路由`);
 
 const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
@@ -215,7 +240,7 @@ listeners.push((msg) => {
 
 async function visit(route) {
   currentRoute = route;
-  await send('Page.navigate', { url: `${BASE}${route}` }, sessionId);
+  await send('Page.navigate', { url: `${ORIGIN}${withBase(route)}` }, sessionId);
   // 等待页面加载与字体就绪
   await new Promise((r) => setTimeout(r, 900));
   await send(
@@ -257,7 +282,7 @@ for (const vp of VIEWPORTS) {
   const overflowRoutes = [];
   for (const route of routes) {
     currentRoute = route;
-    await send('Page.navigate', { url: `${BASE}${route}` }, sessionId);
+    await send('Page.navigate', { url: `${ORIGIN}${withBase(route)}` }, sessionId);
     await new Promise((r) => setTimeout(r, 500));
 
     const { result } = await send(
