@@ -4,19 +4,17 @@
 
 ## 技术栈
 
-| 领域 | 选型                                                     | 说明                                |
-| ---- | -------------------------------------------------------- | ----------------------------------- |
-| 框架 | Astro 7.4.2                                              | 静态生成与路由，默认输出纯静态 HTML |
-| 交互 | React 19.3.1                                             | 仅用于需要客户端注水的复杂组件      |
-| 类型 | TypeScript 6.0.3                                         | `astro check` 严格模式              |
-| 3D   | Three.js 0.182.0 + React Three Fiber 9.8.2 + Drei 10.7.9 | 独立可卸载的场景组件                |
-| 动效 | GSAP 3.15.0（含 ScrollTrigger）                          | 时间轴与滚动叙事                    |
-| 滚动 | Lenis 1.3.27                                             | 平滑滚动增强（Phase 3 接入）        |
-| 部署 | GitHub Pages（gh-pages 分支发布，不使用 Actions）        | 项目仓库，路径 `/Yumesumi-Center/`  |
+| 领域 | 选型                                              | 说明                               |
+| ---- | ------------------------------------------------- | ---------------------------------- |
+| 框架 | Astro 7.4.2                                       | 静态生成与路由，输出纯静态 HTML    |
+| 类型 | TypeScript 6.0.3                                  | `astro check` 严格模式             |
+| 样式 | 原生 CSS + CSS 变量                               | 无 CSS 框架，变量集中在 tokens.css |
+| 动效 | GSAP 3.15.0（含 ScrollTrigger）                   | 时间轴与滚动叙事（Phase 3 接入）   |
+| 滚动 | Lenis 1.3.27                                      | 平滑滚动增强（Phase 3 接入）       |
+| 部署 | GitHub Pages（gh-pages 分支发布，不使用 Actions） | 项目仓库，路径 `/Yumesumi-Center/` |
 
-> **为什么 three 锁定 0.182.0**：three 自 0.183 起弃用 `THREE.Clock`，
-> 而 R3F 9.8.2 内部仍在使用它，会在控制台留下警告。
-> 0.182.0 是最后一个不含该弃用警告的版本，因此锁定为精确版本（不加 `^`）。
+> **没有前端框架依赖**：站点为纯静态 HTML + CSS，不含任何运行时 JavaScript。
+> 首屏不下载 JS，禁用 JavaScript 时内容与样式依然完整（由 `tools/verify-nojs.mjs` 验证）。
 
 ## 环境要求
 
@@ -45,11 +43,10 @@ npm run assets:fonts   # 重新生成字体子集 public/fonts/*
 ```
 src/
 ├── components/
-│   ├── 3d/           # Three.js / R3F 场景（独立可卸载）
-│   ├── motion/       # GSAP 时间轴与滚动叙事
+│   ├── motion/       # GSAP 时间轴与滚动叙事（Phase 3）
 │   ├── sections/     # 首页各章节
-│   └── ui/           # 通用 UI 组件
-├── data/             # 项目清单、导航、站点元数据（结构化数据源）
+│   └── ui/           # 通用 UI 组件（含 BrandLogo）
+├── data/             # 项目清单、导航、站点元信息（结构化数据源）
 ├── layouts/          # 页面布局
 ├── pages/            # 路由
 └── styles/           # 设计变量与全局样式
@@ -95,23 +92,18 @@ MiSans 原始素材约 259MB。`scripts/subset_fonts.py` 使用可变字体 `MiS
 需要时可本地部署或放到自建 CDN；未部署时这些字符自动回落到系统中文字体，
 正文阅读不受影响。
 
-### 3D 场景
+### 品牌标记的呈现
 
-`src/components/3d/` 下的场景**直接复用 Logo 的几何路径**建模，
-而不是另画一套形状：
+`public/brand/logo.svg` 是从 `logo矢量图.ai` 精确提取的真实路径，
+经像素级校验与原 `logo.png` 完全一致（容差 IoU = 1.00000）。
 
-| Logo 构成    | 三维角色                                        |
-| ------------ | ----------------------------------------------- |
-| 圆角菱形外框 | 半透明棱镜骨架（ExtrudeGeometry，带厚度与倒角） |
-| 四芒星       | 发光核心晶体（外层光环 + 内层实体）             |
-| 装饰弧线     | 环绕轨道（沿曲线生成的管体）                    |
-| 底部叶形     | 承载基座                                        |
+全站所有品牌标记一律通过 `src/components/ui/BrandLogo.astro` 呈现，
+**禁止**在任何位置用 CSS 方框、边框、`rotate` 等自造「几何占位」——
+那些图形缺少四芒星与装饰弧线，观感上只是空心几何体，无法传达品牌识别。
 
-路径数据由 `tools/build-logo-svg.mjs` 从 `logo矢量图.ai` 解析后，
-同时输出到 `public/brand/logo.svg` 与 `src/data/logoGeometry.ts`，两者严格同源。
-
-降级策略：`tools/verify-fallback.mjs` 会模拟 WebGL 不可用的环境，
-验证页面仍完整可用（字标、正文、导航、CSS 占位几何体均正常，且无控制台错误）。
+首页 Hero 的背景层是一枚放大到 520px、透明度 0.16 的品牌标记，
+位于文字之后作为空间与质感。尺寸与位置经过调参：太小则失去存在感，
+太大则菱形框的边会跑出画面、只剩中央四芒星，反而认不出是 Logo。
 
 ## 验证
 
@@ -120,12 +112,16 @@ npm run check && npm run build
 node tools/smoke.mjs            # 逐路由浏览器冒烟：控制台报错、资源加载、4 断点横向溢出
 node tools/shoot.mjs            # 多视口截图，产物在 .shots/
 node tools/verify-logo.mjs      # Logo 像素级校验（几何与原 PNG 一致性）
-node tools/verify-fallback.mjs  # WebGL 不可用时的降级路径验证
+node tools/verify-nojs.mjs      # 禁用 JavaScript 时的内容完整性验证
+node tools/verify-production.mjs # 生产环境端到端验证
 ```
 
 冒烟与截图工具会读取 `astro.config.mjs` 的 `base`，
 把 `dist` 挂载到该子路径下，精确模拟 GitHub Pages 的部署环境——
 若页面残留任何未加前缀的绝对路径，会立刻 404 并被抓出来。
+
+`verify-nojs.mjs` 会在禁用 JavaScript 的环境下检查内容与样式是否完整。
+站点没有运行时 JS，这项验证确保首屏不依赖任何脚本即可正常阅读。
 
 ## 部署
 

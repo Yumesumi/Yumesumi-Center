@@ -8,12 +8,15 @@
  *
  * 设计要点：
  *   · 使用从 logo矢量图.ai 精确提取的真实路径（public/brand/logo.svg）
- *   · 通过 CSS 变量控制尺寸与不透明度，适配不同场景
- *   · 提供 aria-label，图形本身对屏幕阅读器隐藏（装饰性时传空字符串）
+ *   · 尺寸支持 maxSize 上限，避免在小屏上溢出
+ *   · 通过 opacity 控制层次
+ *   · 提供 alt 文本；纯装饰时传空字符串
  */
 interface Props {
   /** 尺寸（px） */
   size?: number;
+  /** 尺寸上限（CSS 长度，如 '78vw'）；不传则不限制 */
+  maxSize?: string;
   /** 无障碍标签；纯装饰时传空字符串 */
   label?: string;
   /** 额外 class */
@@ -22,9 +25,20 @@ interface Props {
   opacity?: number;
 }
 
-const { size = 32, label = 'Yumesumi Center', class: className = '', opacity = 1 } = Astro.props;
+const {
+  size = 32,
+  maxSize,
+  label = 'Yumesumi Center',
+  class: className = '',
+  opacity = 1,
+} = Astro.props;
 
 const base = import.meta.env.BASE_URL;
+
+/** 有上限时用 min() 表达，保证小屏不溢出 */
+const sizing = maxSize
+  ? `inline-size:min(${size}px,${maxSize}px);block-size:min(${size}px,${maxSize}px)`
+  : `inline-size:${size}px;block-size:${size}px`;
 ---
 
 <img
@@ -33,14 +47,18 @@ const base = import.meta.env.BASE_URL;
   alt={label}
   width={size}
   height={size}
-  style={`inline-size:${size}px;block-size:${size}px;opacity:${opacity}`}
+  style={`${sizing};opacity:${opacity}`}
 />
 
 <style>
   .ys-logo {
     display: block;
     flex-shrink: 0;
-    /* Logo 是纯白线条图形，继承当前文字颜色才能在不同背景下保持可见 */
+    /*
+      Logo 本身是纯白线条，滤镜保证它在任何背景上都是白色，
+      便于用 opacity 做层次控制。
+      （brightness(0) invert(1) 对纯白图形无副作用，边缘依然锐利。）
+    */
     filter: brightness(0) invert(1);
     transition:
       opacity var(--ys-dur-base) var(--ys-ease-out),

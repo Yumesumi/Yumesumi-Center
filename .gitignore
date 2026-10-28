@@ -38,3 +38,8 @@ pnpm-debug.log*
 
 # 部署暂存目录
 .deploy-pages/
+
+# 临时调参产物
+tools/hero-tune.mjs
+tools/.hero-tune.png
+tools/.filter-test.png

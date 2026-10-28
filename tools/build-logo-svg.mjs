@@ -22,7 +22,6 @@ import { dirname, resolve } from 'node:path';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE_AI = resolve(ROOT, 'logo矢量图.ai');
 const OUT_SVG = resolve(ROOT, 'public/brand/logo.svg');
-const OUT_GEOMETRY = resolve(ROOT, 'src/data/logoGeometry.ts');
 const PAGE = 1024;
 // 原文件 ArtBox：[150.716, 150.716, 873.284, 873.284]，与 logo.png 的取景一致
 const ART_BOX = { x: 150.716, y: 150.716, w: 873.284 - 150.716, h: 873.284 - 150.716 };
@@ -310,97 +309,6 @@ ${body}
 }
 
 /* ------------------------------------------------------------------ *
- * 5. 导出几何数据（供 3D 建模复用）
- * ------------------------------------------------------------------ */
-
-/**
- * 每条路径在 Logo 中的角色。3D 场景直接复用这些路径来建模，
- * 保证三维主体与二维品牌资产同源，不会出现"另画一套形状"的问题。
- *
- *   frame    —— 圆角菱形外框（stroke），3D 中作为棱镜骨架
- *   star     —— 四芒星（fill），3D 中作为核心晶体
- *   arc      —— 装饰弧线（stroke），3D 中作为轨道环
- *   leaf     —— 底部叶形填充，3D 中作为底部基座
- */
-const ROLE_BY_INDEX = ['arc', 'arc', 'arc', 'frame', 'star', 'arc', 'leaf', 'leaf'];
-
-function buildGeometryModule(drawings) {
-  const entries = drawings.map((d, i) => {
-    const role = ROLE_BY_INDEX[i] ?? 'arc';
-    const path = toPathData(d);
-    const attrs =
-      d.operator === 'fill'
-        ? { fill: rgb(d.fillColor) }
-        : {
-            stroke: rgb(d.strokeColor),
-            strokeWidth: round(d.lineWidth),
-            strokeLinecap: CAP_MAP[d.lineCap],
-            strokeLinejoin: JOIN_MAP[d.lineJoin],
-          };
-    return `  {
-    role: '${role}',
-    operator: '${d.operator}',
-    ${Object.entries(attrs)
-      .map(([k, v]) => `${k}: ${typeof v === 'number' ? v : `'${v}'`}`)
-      .join(',\n    ')},
-    d: '${path}',
-  },`;
-  });
-
-  return `/**
- * Yumesumi Center · Logo 几何数据
- *
- * 自动生成，请勿手工修改。运行 \`npm run assets:logo\` 重新生成。
- *
- * 来源：logo矢量图.ai（PDF 兼容格式）内容流的精确解析结果，
- * 与 public/brand/logo.svg 完全同源。
- *
- * 坐标系与 SVG 一致（y 向下，单位为 SVG viewBox 的 1/1024 倍）。
- * 3D 场景用这些路径直接构建几何体，保证三维主体与二维品牌资产同源。
- *
- * role 含义：
- *   frame —— 圆角菱形外框，3D 棱镜骨架
- *   star  —— 四芒星，3D 核心晶体
- *   arc   —— 装饰弧线，3D 轨道环
- *   leaf  —— 底部叶形，3D 基座
- */
-
-export type LogoPathRole = 'frame' | 'star' | 'arc' | 'leaf';
-
-export interface LogoPath {
-  role: LogoPathRole;
-  operator: 'fill' | 'stroke';
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
-  strokeLinecap?: string;
-  strokeLinejoin?: string;
-  d: string;
-}
-
-/** Logo 在 1024 单位画布中的几何信息 */
-export const LOGO_METRICS = {
-  /** 原始画布尺寸 */
-  canvas: ${PAGE},
-  /** 菱形外框的边界框（Logo 在画布中的实际占据范围） */
-  frameBounds: { minX: 160, minY: 160, maxX: 864, maxY: 864 },
-  /** 四芒星中心 */
-  starCenter: { x: 512, y: 512 },
-  /** 四芒星外尖角半径（大星）与内尖角半径（小星） */
-  starOuterRadius: 185,
-  starInnerRadius: 113.284,
-  /** 品牌色 */
-  color: 'rgb(255 255 255)',
-} as const;
-
-/** 全部 Logo 路径，按绘制顺序 */
-export const LOGO_PATHS: LogoPath[] = [
-${entries.join('\n')}
-];
-`;
-}
-
-/* ------------------------------------------------------------------ *
  * main
  * ------------------------------------------------------------------ */
 if (!existsSync(SOURCE_AI)) {
@@ -417,10 +325,8 @@ if (drawings.length === 0) {
 }
 
 writeFileSync(OUT_SVG, buildSvg(drawings), 'utf8');
-writeFileSync(OUT_GEOMETRY, buildGeometryModule(drawings), 'utf8');
 
 const fills = drawings.filter((d) => d.operator === 'fill').length;
 const strokes = drawings.filter((d) => d.operator === 'stroke').length;
 console.log(`[logo] 解析 ${drawings.length} 条路径（${fills} 填充 / ${strokes} 描边）`);
 console.log(`[logo] 输出 ${OUT_SVG}`);
-console.log(`[logo] 输出 ${OUT_GEOMETRY}`);

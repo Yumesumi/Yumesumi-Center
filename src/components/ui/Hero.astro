@@ -1,18 +1,16 @@
 ---
 /**
- * 首页 Hero —— Phase 1 占位版本。
+ * 首页 Hero
  *
- * 当前实现是纯静态的排版原型，用于先验证品牌字标的字号、字距、留白与重心。
- * Phase 2 会在此基础上接入 React Three Fiber 的实时 3D 场景：
- *   · 中央半透明几何主体
- *   · 雾气 / 环境光 / 视差
- *   · 随滚动推进的镜头时间轴
+ * 构成：文字层 + 一枚置于其后的巨大品牌标记。
+ * 品牌标记直接使用从 logo矢量图.ai 精确提取的真实路径（public/brand/logo.svg），
+ * 以低透明度放大到远超字号的尺寸，作为背景图形与空间纵深，
+ * 不与前景字标争夺注意力。
  *
- * 因此这里刻意把「文字层」与「场景层」分成两个独立区块，
- * Phase 2 只需替换 <div class="hero__scene"> 的内容，不必重排结构。
+ * 纯静态实现——不依赖 WebGL、不需要 JavaScript，
+ * 在任何环境下都能完整呈现。
  */
 import { SITE } from '@/data/site';
-import LogoSceneIsland from '@/components/3d/LogoSceneIsland.astro';
 import BrandLogo from '@/components/ui/BrandLogo.astro';
 
 const base = import.meta.env.BASE_URL;
@@ -21,16 +19,15 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
 
 <section class="hero" data-hero>
   <!--
-    场景层：实时 3D（WebGL 不可用时自动降级为下方静态品牌标记）
-    aria-hidden：这是装饰性图层，页面标题已完整表达站点身份，
-    屏幕阅读器不需要重复朗读 Logo。
+    背景层：巨大品牌标记。
+    aria-hidden：装饰性图层，页面标题已完整表达站点身份，
+    屏幕阅读器不需要重复朗读。
   -->
-  <div class="hero__scene" data-hero-scene aria-hidden="true">
+  <div class="hero__backdrop" aria-hidden="true">
     <div class="hero__glow"></div>
-    <div class="hero__geometry">
-      <BrandLogo size={520} label="" opacity={0.16} />
+    <div class="hero__mark">
+      <BrandLogo size={520} maxSize="78vw" label="" opacity={0.16} />
     </div>
-    <LogoSceneIsland />
   </div>
 
   <!-- 文字层 -->
@@ -73,9 +70,9 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     display: grid;
     align-content: center;
     min-block-size: 100svh;
-    /* 顶部留出空间给 3D 主体，避免与字标重叠 */
-    padding-block: calc(var(--ys-nav-height) + var(--ys-space-3xl)) var(--ys-space-2xl);
+    padding-block: calc(var(--ys-nav-height) + var(--ys-space-2xl)) var(--ys-space-2xl);
     overflow: clip;
+    isolation: isolate;
     background: radial-gradient(
       120% 80% at 50% 8%,
       var(--ys-deep) 0%,
@@ -85,51 +82,49 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     );
   }
 
-  /* ---------- 场景层（Phase 1 为纯 CSS 占位） ---------- */
+  /* ---------- 背景层 ---------- */
 
-  .hero__scene {
+  .hero__backdrop {
     position: absolute;
     inset: 0;
+    z-index: 0;
     pointer-events: none;
+    overflow: hidden;
   }
 
+  /* 中心辉光，为巨大标记提供空气感 */
   .hero__glow {
     position: absolute;
     inset-block-start: 50%;
     inset-inline-start: 50%;
-    inline-size: min(78vw, 46rem);
+    inline-size: min(86vw, 54rem);
     aspect-ratio: 1;
-    translate: -50% -58%;
+    translate: -50% -52%;
     border-radius: 50%;
     background: radial-gradient(
       circle,
-      rgb(109 79 196 / 26%) 0%,
-      rgb(45 31 86 / 16%) 38%,
-      transparent 68%
+      rgb(109 79 196 / 24%) 0%,
+      rgb(45 31 86 / 14%) 40%,
+      transparent 70%
     );
-    filter: blur(28px);
-    /* 3D 场景就绪后让位，避免两层几何重叠 */
-    transition: opacity var(--ys-dur-cinematic) var(--ys-ease-out);
+    filter: blur(32px);
   }
 
-  .hero__geometry {
+  /*
+    巨大品牌标记。
+    尺寸经过调参：太小则失去存在感，太大则菱形框的边会跑出画面、
+    只剩中央四芒星，反而认不出是 Logo。
+    位置同样经过调整：整体略微下移，让四芒星实心区避开文字带，
+    否则「梦澄中心」会被压在四芒星上难以辨认。
+  */
+  .hero__mark {
     position: absolute;
-    inset-block-start: 50%;
+    inset-block-start: 53%;
     inset-inline-start: 50%;
     display: grid;
     place-items: center;
-    inline-size: min(56vw, 32rem);
-    aspect-ratio: 1;
-    /* 后移并压暗，避免与前景字标争夺视觉重心 */
     translate: -50% -50%;
-    scale: 1.04;
-    transition: opacity var(--ys-dur-cinematic) var(--ys-ease-out);
-  }
-
-  /* 场景已挂载时，CSS 占位退场 */
-  .hero__scene:has(.scene-root canvas) .hero__glow,
-  .hero__scene:has(.scene-root canvas) .hero__geometry {
-    opacity: 0;
+    rotate: -6deg;
   }
 
   /* ---------- 文字层 ---------- */
@@ -147,6 +142,11 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     letter-spacing: var(--ys-ls-widest);
     text-transform: uppercase;
     color: var(--ys-text-muted);
+    /* 背景标记中央是四芒星，小字叠在上面会看不清——加一层暗底托住 */
+    padding-block: var(--ys-space-3xs);
+    text-shadow:
+      0 0 12px var(--ys-void),
+      0 0 24px var(--ys-void);
   }
 
   .hero__wordmark {
@@ -173,6 +173,10 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
     font-size: var(--ys-fs-base);
     line-height: var(--ys-lh-relaxed);
     color: var(--ys-text-secondary);
+    /* 背景标记的底部叶形会穿过这一带，用暗底托住保证可读性 */
+    text-shadow:
+      0 0 14px var(--ys-void),
+      0 0 28px var(--ys-void);
   }
 
   .hero__actions {
@@ -262,10 +266,6 @@ const withBase = (href: string) => `${base}${href.replace(/^\//, '')}`;
   @media (max-width: 767px) {
     .hero {
       min-block-size: 92svh;
-    }
-
-    .hero__geometry {
-      inline-size: min(72vw, 17rem);
     }
 
     .hero__lede {

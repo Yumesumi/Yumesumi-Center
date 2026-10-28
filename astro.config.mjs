@@ -1,6 +1,5 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
 
 /**
  * Yumesumi Center · Astro 配置
@@ -24,12 +23,6 @@ export default defineConfig({
     inlineStylesheets: 'auto',
   },
 
-  integrations: [
-    // React 集成。仅在明确标注 client:* 的组件上注水，
-    // 其余页面保持纯静态输出。
-    react(),
-  ],
-
   devToolbar: {
     enabled: false,
   },
@@ -39,12 +32,9 @@ export default defineConfig({
       rollupOptions: {
         output: {
           // Astro 7 使用 Rolldown 作为打包器，分包配置走 codeSplitting.groups。
-          // three.js 体积较大，单独拆包，让应用代码可以与之并行加载。
+          // GSAP 体积较大且只在动效相关代码里用到，单独拆包便于并行加载。
           codeSplitting: {
-            groups: [
-              { name: 'three', test: /node_modules[\\/]three[\\/]/ },
-              { name: 'motion', test: /node_modules[\\/]gsap[\\/]/ },
-            ],
+            groups: [{ name: 'motion', test: /node_modules[\\/]gsap[\\/]/ }],
           },
         },
       },
